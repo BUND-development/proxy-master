@@ -58,9 +58,9 @@ class Data():
 		self.MAINURLS = (  # сайты, с которых парсится основная часть проксей путем регулярных исключений и архивов
 			"http://www.proxyserverlist24.top/",
 			"http://www.socks24.org",
-			#"http://www.vipsocks24.net/",
-			#"http://www.socksproxylist24.top/",
-			#"http://www.sslproxies24.top/"
+			"http://www.vipsocks24.net/",
+			"http://www.socksproxylist24.top/",
+			"http://www.sslproxies24.top/"
 			)
 		self.SOMELINKS = "something.txt" # файл, нужный для дебаггинга
 		self.TIMEOUT = (30, 50)
@@ -99,7 +99,6 @@ class Parsing(Data):
 				pass
 		random.shuffle(links)
 		links = set(links)  # очистка дубликатов ссылок
-		#links = list(links)
 		return links  # возвращение списка
 
 # ============================================================
