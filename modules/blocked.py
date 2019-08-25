@@ -6,7 +6,7 @@ class Blocked():
 	def __init__(self, proxies):
 		self.proxies = proxies
 		self.blacklist = []
-		with open("blacklist.txt", mode="r") as file:
+		with open("texts/blacklist.txt", mode="r") as file:
 			self.blacklist = file.read().split("\n")
 			for i in self.blacklist:
 				if i == "" or i == " ":

@@ -10,7 +10,7 @@ class FilteringSubnets():
 	def __init__(self, proxies):
 		self.proxies = proxies
 		self.subnets = []
-		with open("subnets", mode="r") as file:
+		with open("texts/subnets.txt", mode="r") as file:
 			self.subnets = file.read().split("\n")
 			for i in self.subnets:
 				if (i == "") or (i == " ") or ("#" in i):  # удаление комментариев и пустых строк

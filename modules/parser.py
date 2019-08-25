@@ -21,7 +21,7 @@ def coloring(string, color):
 # ============================================================
 try:
 	# установка нужных библиотек
-    os.system("pip install requests pysocks urllib3 bs4 colorama lxml" if os.name=="nt" else "pip3 install --user requests pysocks urllib3 bs4 colorama lxml")
+    os.system("pip install requests pysocks urllib3 bs4 colorama lxml pygeoip" if os.name=="nt" else "pip3 install --user requests pysocks urllib3 bs4 colorama lxml pygeoip")
 except:
     pass
 finally:
@@ -54,7 +54,7 @@ class Data():
 	'''Класс с настройками'''
 
 	def __init__(self):
-		self.FILENAME = "proxies-parsed.txt"  # файл импорта
+		self.FILENAME = "proxies-parsed.txt"  # файл для дебагга, не нужен
 		self.MAINURLS = (  # сайты, с которых парсится основная часть проксей путем регулярных исключений и архивов
 			"http://www.proxyserverlist24.top/",
 			"http://www.socks24.org",

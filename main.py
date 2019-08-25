@@ -19,7 +19,7 @@ def coloring(string, color):
 
 
 try:
-	from modules import parser, proxyscrape, subnets, blocked
+	from modules import parser, proxyscrape, subnets, blocked, weed
 	import colorama
 	colorama.init()
 	import sys
@@ -38,12 +38,12 @@ def out_logo():
 	print(r" | |      | | \ \  | |__| |  / . \     | |        | |  | |  / ____ \   ____) |    | |    | |____  | | \ \  ")
 	print(r" |_|      |_|  \_\  \____/  /_/ \_\    |_|        |_|  |_| /_/    \_\ |_____/     |_|    |______| |_|  \_\ ")
 	print("")
-	print(r"  __        ___                                                                                            ")
-	print(r" /_ |      / _ \                                                                                           ")
-	print(r"  | |     | | | |                                                                                          ")
-	print(r"  | |     | | | |                                                                                          ")
-	print(r"  | |  _  | |_| |                                                                                          ")
-	print(r"  |_| (_)  \___/                                                                                           ")
+	print(r"  __       __                                                                                              ")
+	print(r" /_ |     /_ |                                                                                             ")
+	print(r"  | |      | |                                                                                             ")
+	print(r"  | |      | |                                                                                             ")
+	print(r"  | |  _   | |                                                                                             ")
+	print(r"  |_| (_)  |_|                                                                                             ")
 	print("\n\n")
 
 class Main():
@@ -52,11 +52,12 @@ class Main():
 		super().__init__()
 		out_logo()
 		self.export = []  # прокси на выход
-		self.FILENAME_EXPORT = "proxies.txt"  # файл с прокси
+		self.FILENAME_EXPORT = "proxies.txt"  # файл с прокси на выходе
 		self.NORMALINPUT = False
 		self.PARSE = True  # парсить прокси
 		self.SUBNETS = True  # фильтрование по подсетям
 		self.BLACKLIST = True  # блеклист айпи
+		self.COUNTRIES = True  # фильтровать по странам
 		
 	def main(self):
 		Main.geting(self)
@@ -91,6 +92,11 @@ class Main():
 			self.export = filtering.start()
 			print(coloring("Удаление одинаковых айпи закончено.", "green"))
 
+		if self.COUNTRIES:
+			print(coloring("Фильтрация по странам началась...", "green"))
+			self.export = weed.weed(self.export)
+			print(coloring("Фильтрация по странам закончена.", "green"))
+		
 		with open(self.FILENAME_EXPORT, mode="w", encoding="UTF-8") as file:
 			try:
 				self.export.remove("")
