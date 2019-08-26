@@ -16,10 +16,10 @@ def coloring(string, color):
 		pass
 	return string
 
-
+from modules import checker
 
 try:
-	from modules import parser, proxyscrape, subnets, blocked, weed
+	from modules import parser, proxyscrape, subnets, blocked, weed, checker
 	import colorama
 	colorama.init()
 	import sys
@@ -38,12 +38,15 @@ def out_logo():
 	print(r" | |      | | \ \  | |__| |  / . \     | |        | |  | |  / ____ \   ____) |    | |    | |____  | | \ \  ")
 	print(r" |_|      |_|  \_\  \____/  /_/ \_\    |_|        |_|  |_| /_/    \_\ |_____/     |_|    |______| |_|  \_\ ")
 	print("")
-	print(r"  __       __                                                                                              ")
-	print(r" /_ |     /_ |                                                                                             ")
-	print(r"  | |      | |                                                                                             ")
-	print(r"  | |      | |                                                                                             ")
-	print(r"  | |  _   | |                                                                                             ")
-	print(r"  |_| (_)  |_|                                                                                             ")
+	print(r"  __       ___  ")
+	print(r" /_ |     |__ \ ")
+	print(r"  | |        ) |")
+	print(r"  | |       / / ")
+	print(r"  | |  _   / /_ ")
+	print(r"  |_| (_) |____|")
+	print("\n")
+                
+                
 	print("\n\n")
 
 class Main():
@@ -53,14 +56,17 @@ class Main():
 		out_logo()
 		self.export = []  # прокси на выход
 		self.FILENAME_EXPORT = "proxies.txt"  # файл с прокси на выходе
-		self.NORMALINPUT = False
-		self.PARSE = True  # парсить прокси
-		self.SUBNETS = True  # фильтрование по подсетям
-		self.BLACKLIST = True  # блеклист айпи
-		self.COUNTRIES = True  # фильтровать по странам
+		self.NORMALINPUT = False  # ввод аргументов
+		# self.PARSE = False  # парсить прокси
+		# self.SUBNETS = True  # фильтрование по подсетям
+		# self.BLACKLIST = True  # блеклист айпи
+		# self.COUNTRIES = True  # фильтровать по странам
+		# self.CHECK = True  # проверять на работоспособность
+		# self.CHECKON2CH = True  # проверять на бан на 2ch.hk
 		
 	def main(self):
 		Main.geting(self)
+		print(coloring("Ввод получен!", "green"))
 		with open("input-proxies.txt", mode="r", encoding="UTF-8") as file:
 			self.export = file.read().split("\n")
 			try:
@@ -96,36 +102,63 @@ class Main():
 			print(coloring("Фильтрация по странам началась...", "green"))
 			self.export = weed.weed(self.export)
 			print(coloring("Фильтрация по странам закончена.", "green"))
-		
+
+		if self.CHECK:
+			print(coloring("Проверка на рабоспособность началась...", "green"))
+			filtering = checker.Check(self.export, self.TYPE, self.CHECKON2CH)
+			#self.export = filtering.main_main()
+			try:
+				self.export = filtering.main_main()
+			except KeyboardInterrupt:
+				print("Принудительный выход, сохранение...")
+			except:
+				print(coloring("Ошибка модуля проверки на постинг, просьба написать об этом на почту", "red"))
+			else:
+				print(coloring("Проверка на рабоспособность закончена.", "green"))
+
 		with open(self.FILENAME_EXPORT, mode="w", encoding="UTF-8") as file:
+			print("", end="\n\n")
 			try:
 				self.export.remove("")
 			except:
 				pass
-			print("Всего было обработано {0} прокси-серверов.".format(str(len(self.export))))
+			print("Всего {0} прокси-серверов.".format(str(len(self.export))))
 			for i in self.export:
 				file.write(str(i) + "\n")
 
 	def geting(self):
 		if self.NORMALINPUT:
-			#self.TYPE = sys.argv[1]  # тип прокси
-			#self.SUBNETS = bool(sys.argv[2])  # фильтрование по подсетям
-			#self.BLACKLIST = bool(sys.argv[3])  # блеклист айпи
-			#self.WORKCHECK = bool(sys.argv[2])  # проверка на рабоспособность
-			pass
+			self.TYPE = sys.argv[1]
+			# self.PARSE = True # парсить прокси
+			# self.SUBNETS = True  # фильтрование по подсетям
+			# self.BLACKLIST = True  # блеклист айпи
+			# self.COUNTRIES = True  # фильтровать по странам
+			# self.CHECK = False # проверять на работоспособность
+			# self.CHECKON2CH = True  # проверять на бан на 2ch.hk
 		# статичные параметры для дебага, пока не используются
-		elif True:  
-			self.TYPE = "http"  # тип прокси
-			#self.SUBNETS = 1  # фильтрование по подсетям
-			#self.BLACKLIST = 1  # блеклист айпи
-			self.WORKCHECK = 1  # проверка на рабоспособность
-			pass
+		# elif False:  
+		# 	self.TYPE = "http"  # тип прокси
+		# 	self.PARSE = False  # парсить прокси
+		# 	self.SUBNETS = True  # фильтрование по подсетям
+		# 	self.BLACKLIST = True  # блеклист айпи
+		# 	self.COUNTRIES = True  # фильтровать по странам
+		# 	self.CHECK = True  # проверять на работоспособность
+		# 	self.CHECKON2CH = True  # проверять на бан на 2ch.hk
 		else:
-			#self.TYPE = input("Тип соединения (https/http/socks4/socks5)> ")  # тип прокси
-			#self.SUBNETS = bool(input("Фильтровать по подсетям (0 - нет, 1 - да)> "))  # фильтрование по подсетям
-			#self.BLACKLIST = bool(input("Использовать блеклист айпи (0 - нет, 1 - да)> "))  # блеклист айпи
-			#self.WORKCHECK = bool(input("Проверять на рабоспособность (0 - нет, 1 - да)> "))  # проверка на рабоспособность
-			pass
+			self.TYPE = input("Введите протокол прокси> ")
+			# self.PARSE = True  # парсить прокси
+			# self.SUBNETS = True  # фильтрование по подсетям
+			# self.BLACKLIST = True  # блеклист айпи
+			# self.COUNTRIES = True  # фильтровать по странам
+			# self.CHECK = False  # проверять на работоспособность
+			# self.CHECKON2CH = True  # проверять на бан на 2ch.hk
+		self.PARSE = True # парсить прокси
+		self.SUBNETS = True  # фильтрование по подсетям
+		self.BLACKLIST = True  # блеклист айпи
+		self.COUNTRIES = True  # фильтровать по странам
+		self.CHECK = True # проверять на работоспособность
+		self.CHECKON2CH = True  # проверять на бан на 2ch.hk
+			
 
 
 if __name__ == "__main__":

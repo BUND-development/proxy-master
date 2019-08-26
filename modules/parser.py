@@ -21,7 +21,7 @@ def coloring(string, color):
 # ============================================================
 try:
 	# установка нужных библиотек
-    os.system("pip install requests pysocks urllib3 bs4 colorama lxml pygeoip" if os.name=="nt" else "pip3 install --user requests pysocks urllib3 bs4 colorama lxml pygeoip")
+    os.system("pip install requests pysocks urllib3 bs4 colorama lxml pygeoip backoff" if os.name=="nt" else "pip3 install --user requests pysocks urllib3 bs4 colorama lxml pygeoip backoff")
 except:
     pass
 finally:
