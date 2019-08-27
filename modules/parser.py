@@ -108,6 +108,9 @@ class Parsing(Data):
 			# ===================
 			try:
 				answer = requests.get(url_name, timeout=self.TIMEOUT, verify=False)  # получения страницы этой ссылки
+			except KeyboardInterrupt:
+				print(coloring("Принудительный выход...", "yellow"))
+				break
 			except:
 				print(coloring("Не удалось получить страницу юрла.", "yellow"))
 				continue

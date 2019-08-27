@@ -23,6 +23,7 @@ try:
 	import colorama
 	colorama.init()
 	import sys
+	import json
 except:
 	print(coloring("Не удалось загрузить все модули/библиотеки!", "red"))
 	exit(1)
@@ -38,15 +39,13 @@ def out_logo():
 	print(r" | |      | | \ \  | |__| |  / . \     | |        | |  | |  / ____ \   ____) |    | |    | |____  | | \ \  ")
 	print(r" |_|      |_|  \_\  \____/  /_/ \_\    |_|        |_|  |_| /_/    \_\ |_____/     |_|    |______| |_|  \_\ ")
 	print("")
-	print(r"  __       ___  ")
-	print(r" /_ |     |__ \ ")
-	print(r"  | |        ) |")
-	print(r"  | |       / / ")
-	print(r"  | |  _   / /_ ")
-	print(r"  |_| (_) |____|")
-	print("\n")
-                
-                
+	print(r"  __       ____   ")
+	print(r" /_ |     |___ \  ")
+	print(r"  | |       __) | ")
+	print(r"  | |      |__ <  ")
+	print(r"  | |  _   ___) | ")
+	print(r"  |_| (_) |____/  ")          
+	print("\n")             
 	print("\n\n")
 
 class Main():
@@ -55,14 +54,16 @@ class Main():
 		super().__init__()
 		out_logo()
 		self.export = []  # прокси на выход
-		self.FILENAME_EXPORT = "proxies.txt"  # файл с прокси на выходе
-		self.NORMALINPUT = False  # ввод аргументов
-		# self.PARSE = False  # парсить прокси
-		# self.SUBNETS = True  # фильтрование по подсетям
-		# self.BLACKLIST = True  # блеклист айпи
-		# self.COUNTRIES = True  # фильтровать по странам
-		# self.CHECK = True  # проверять на работоспособность
-		# self.CHECKON2CH = True  # проверять на бан на 2ch.hk
+		with open("settings.ini", mode="r") as file:
+			settings = json.load(file)
+			self.FILENAME_EXPORT = settings["FILENAME_EXPORT"]  # файл с прокси на выходе
+			self.NORMALINPUT = settings["NORMALINPUT"]  # ввод аргументов
+			self.PARSE = settings["PARSE"] # парсить прокси
+			self.SUBNETS = settings["SUBNETS"] # фильтрование по подсетям
+			self.BLACKLIST = settings["BLACKLIST"]  # блеклист айпи
+			self.COUNTRIES = settings["COUNTRIES"]  # фильтровать по странам
+			self.CHECK = settings["CHECK"] # проверять на работоспособность
+			self.CHECKON2CH = settings["CHECKON2CH"]  # проверять на бан на 2ch.hk
 		
 	def main(self):
 		Main.geting(self)
@@ -127,8 +128,20 @@ class Main():
 				file.write(str(i) + "\n")
 
 	def geting(self):
+		with open("settings.ini", mode="r", encoding="utf-8") as file:
+			settings = json.load(file)
+
+
+
 		if self.NORMALINPUT:
-			self.TYPE = sys.argv[1]
+			try:
+				self.TYPE = sys.argv[1]
+			except IndexError:
+				print(coloring("Ты забыл написать параметр командной строки!", "red"))
+				exit(1)
+			if (sys.argv[1] != "http") and (sys.argv[1] != "https") and (sys.argv[1] != "socks4") and (sys.argv[1] != "socks5"):
+				print(coloring("Введенный протокол прокси не поддерживается, ты точно ввел его правильно?", "red"))
+				exit(1)
 			# self.PARSE = True # парсить прокси
 			# self.SUBNETS = True  # фильтрование по подсетям
 			# self.BLACKLIST = True  # блеклист айпи
@@ -146,18 +159,21 @@ class Main():
 		# 	self.CHECKON2CH = True  # проверять на бан на 2ch.hk
 		else:
 			self.TYPE = input("Введите протокол прокси> ")
+			if (self.TYPE != "http") and (self.TYPE != "https") and (self.TYPE != "socks4") and (self.TYPE != "socks5"):
+				print(coloring("Введенный протокол прокси не поддерживается, ты точно ввел его правильно?", "red"))
+				exit(1)
 			# self.PARSE = True  # парсить прокси
 			# self.SUBNETS = True  # фильтрование по подсетям
 			# self.BLACKLIST = True  # блеклист айпи
 			# self.COUNTRIES = True  # фильтровать по странам
 			# self.CHECK = False  # проверять на работоспособность
 			# self.CHECKON2CH = True  # проверять на бан на 2ch.hk
-		self.PARSE = True # парсить прокси
-		self.SUBNETS = True  # фильтрование по подсетям
-		self.BLACKLIST = True  # блеклист айпи
-		self.COUNTRIES = True  # фильтровать по странам
-		self.CHECK = True # проверять на работоспособность
-		self.CHECKON2CH = True  # проверять на бан на 2ch.hk
+		# self.PARSE = True # парсить прокси
+		# self.SUBNETS = True  # фильтрование по подсетям
+		# self.BLACKLIST = True  # блеклист айпи
+		# self.COUNTRIES = True  # фильтровать по странам
+		# self.CHECK = True # проверять на работоспособность
+		# self.CHECKON2CH = True  # проверять на бан на 2ch.hk
 			
 
 
