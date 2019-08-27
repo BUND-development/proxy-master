@@ -1,5 +1,5 @@
 # Ultimate proxy master
-ver 1.2  
+ver 1.3  
 
 
 ## Что это такое?
