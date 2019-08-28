@@ -10,12 +10,13 @@ class FilteringSubnets():
 	def __init__(self, proxies):
 		self.proxies = proxies
 		self.subnets = []
+		self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 		with open("texts/subnets.txt", mode="r") as file:
 			self.subnets = file.read().split("\n")
 			for i in self.subnets:
 				if (i == "") or (i == " ") or ("#" in i):  # удаление комментариев и пустых строк
 					self.subnets.remove(i)
-		print("Фильтрование подсетей...")
+		print(self.NAME + "Фильтрование подсетей...")
 
 	def start(self):
 		# проверка на валидность прокси
@@ -41,7 +42,7 @@ class FilteringSubnets():
 			if re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+", i):  # если айпи подходит под шаблон
 				lst2.append(i)
 			else:
-				print("Найдена невалидная прокси {0}".format(i))
+				print(self.NAME + "Найдена невалидная прокси {0}".format(i))
 			
 		for i in range(0, len(lst2)):
 			lst2[i] = lst2[i].split(":")  # разделение на айпи и порт
@@ -52,7 +53,7 @@ class FilteringSubnets():
 			for i2 in i[0]:
 				if int(i2) > 255 or int(i2) < 0:
 					valid = False
-					print("Найден невалидный блок прокси {0}".format(i2))
+					print(self.NAME + "Найден невалидный блок прокси {0}".format(i2))
 					break
 			if valid:
 				output.append(i)
@@ -71,15 +72,15 @@ class FilteringSubnets():
 			for subnet in self.subnets:
 				try:
 					if ipaddress.ip_address(proxylist[i][0]) in ipaddress.ip_network(subnet):  # входит ли айпи в запрещенную подсеть
-						print("Удален айпи ({0}), входящий в запрещенную подсеть.".format(str(proxylist[i][0])))
+						print(self.NAME + "Удален айпи ({0}), входящий в запрещенную подсеть.".format(str(proxylist[i][0])))
 						ifinsubnet = True
 						break
 					else:
 						pass
 				except ValueError:
-					print("Удален невалидный айпи ({0})".format(i[0]))
+					print(self.NAME + "Удален невалидный айпи ({0})".format(i[0]))
 				except:
-					input("Необработанная ошибка!")
+					input(self.NAME + "Необработанная ошибка!")
 					print(proxylist[i])
 				else:
 					pass

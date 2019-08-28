@@ -6,6 +6,7 @@ class Blocked():
 	def __init__(self, proxies):
 		self.proxies = proxies
 		self.blacklist = []
+		self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 		with open("texts/blacklist.txt", mode="r") as file:
 			self.blacklist = file.read().split("\n")
 			for i in self.blacklist:
@@ -36,7 +37,7 @@ class Blocked():
 			if not ifdouble:
 				out.append(i)
 			else:
-				print("Найден повторяющийся айпи в прокси {0}, удаление...".format(i[0] + ":" + i[1]))
+				print(self.NAME + "Найден повторяющийся айпи в прокси {0}, удаление...".format(i[0] + ":" + i[1]))
 		return out
 
 	def remove_blocked(self, proxylist):
@@ -45,7 +46,7 @@ class Blocked():
 			ifblocked = False
 			for i2 in self.blacklist:
 				if i[0] == i2:
-					print("Найдена прокси, находящийся в айпи-блеклисте {0}".format(i[0] + ":" + i[1]))
+					print(self.NAME + "Найдена прокси, находящийся в айпи-блеклисте {0}".format(i[0] + ":" + i[1]))
 					ifblocked = True
 					break
 			if not ifblocked:

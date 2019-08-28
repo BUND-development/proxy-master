@@ -16,6 +16,7 @@ def get_states(filename):
 	return states
 
 def weed(IPs):
+	NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 	states = get_states("texts/countries.txt")
 	gi = pygeoip.GeoIP("texts/GeoIP.dat")
 	export = []
@@ -32,7 +33,7 @@ def weed(IPs):
 			elif not (state in states):
 				export.append(IP)
 			else:
-				print("Найден айпи из блек-лист страны {0}".format(IP))
+				print(NAME + "Найден айпи из блек-лист страны {0}".format(IP))
 		except Exception:
 			pass
 	return export

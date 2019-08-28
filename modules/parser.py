@@ -65,6 +65,7 @@ class Data():
 		self.SOMELINKS = "something.txt" # файл, нужный для дебаггинга
 		self.TIMEOUT = (30, 50)
 		self.DOWNLOADTIMEOUT = 10
+		self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 		#self.SLEEPTIME = random.randint(10, 30)  # приостановка программы перед следующим запросом
 
 
@@ -109,13 +110,13 @@ class Parsing(Data):
 			try:
 				answer = requests.get(url_name, timeout=self.TIMEOUT, verify=False)  # получения страницы этой ссылки
 			except KeyboardInterrupt:
-				print(coloring("Принудительный выход...", "yellow"))
+				print(self.NAME + coloring("Принудительный выход...", "yellow"))
 				break
 			except:
-				print(coloring("Не удалось получить страницу юрла.", "yellow"))
+				print(self.NAME + coloring("Не удалось получить страницу юрла.", "yellow"))
 				continue
 			else:
-				print(coloring("Страница успешно скачана, проверяется наличие проксей...", ""))
+				print(self.NAME + coloring("Страница успешно скачана, проверяется наличие проксей...", ""))
 			# ===================
 			answer = bs4.BeautifulSoup(answer.text, "lxml")  # создание объекта супа из html страницы
 			proxies_find = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+", str(answer))  # поиск проксей на страницах с помощью регулярных выражений и добавление их в архив
@@ -128,7 +129,7 @@ class Parsing(Data):
 				try:
 					if "zip" in link:  # если в ссылке есть слово zip
 						# ===================
-						print(coloring("Обнаружена ссылка на скачивание> {0}".format(str(link)), ""))
+						print(self.NAME + coloring("Обнаружена ссылка на скачивание> {0}".format(str(link)), ""))
 						# ===================
 						link_in = requests.get(link, timeout=self.TIMEOUT, verify=False)  # получения страницы с файлом
 						link_in = bs4.BeautifulSoup(link_in.text, "lxml")  # создание объекта супа этой страницы
@@ -141,7 +142,7 @@ class Parsing(Data):
 								download = download.get("href")  # получение ссылки
 								# ===================
 								if (".zip" in download):  # если есть четкая ссылка на .zip файл
-									print(coloring("Обнаружена прямая ссылка на скачивание> {0}".format(str(download)), "green"))
+									print(self.NAME + coloring("Обнаружена прямая ссылка на скачивание> {0}".format(str(download)), "green"))
 									# ===================
 									#file = requests.get(download, stream = True)  # скачивание архива
 									#print(coloring(
@@ -149,15 +150,15 @@ class Parsing(Data):
 										#"green"
 										#))
 									#time.sleep(self.SLEEPTIME)
-									print(coloring("Скачивание файла...", ""))
+									print(self.NAME + coloring("Скачивание файла...", ""))
 									#self.SLEEPTIME = random.randint(20, 30)
 									try:
 										file = requests.get(download, timeout=self.DOWNLOADTIMEOUT)
 									except Exception as a:
-										print(coloring("Ошибка загрузки файла!", "red"))
+										print(self.NAME + coloring("Ошибка загрузки файла!", "red"))
 										raise a
 									else:
-										print(coloring("Файл успешно загружен в память, идет запись на диск...", ""))
+										print(self.NAME + coloring("Файл успешно загружен в память, идет запись на диск...", ""))
 
 									# ===================
 									filename = os.getcwd() + "/downloads/" + str(random.randint(1, 1000)) + ".zip"  # загрузка архива в папку 
@@ -167,7 +168,7 @@ class Parsing(Data):
 										#print(coloring("Файл сохранен успешно!", "green"))
 										#self.download_files.append(filename)  # запись в список загруженных файлов
 										# ===================
-										print(
+										print(self.NAME + 
 											coloring(
 												"Обнаруженный архив загружен успешно и сохранен: {0}".format(filename),
 												"green"
@@ -181,7 +182,7 @@ class Parsing(Data):
 					pass
 			# ==============================================
 			if len(proxies_find) != 0:  # если нашлись прокси
-				print(
+				print(self.NAME + 
 					coloring(
 						"Найдено {0} проксей, ".format(len(proxies_find)), 
 						""
@@ -200,9 +201,9 @@ class Parsing(Data):
 				# ===================			
 				self.proxies_list.extend(proxies_find)  # добавление списка проксей к уже имеющимся прокси
 			else:
-				print(coloring("Не найдено проксей на скачанной странице.", "yellow"))
+				print(self.NAME + coloring("Не найдено проксей на скачанной странице.", "yellow"))
 		# ==============================================
-		print(
+		print(self.NAME + 
 			coloring(
 				"Всего напарсено с сайтов {0} проксей, ".format(len(self.proxies_list)),
 				""
@@ -238,7 +239,7 @@ class Parsing(Data):
 		# ===================
 		proxies.extend(Parsing.open_archives(self))  # добавление архивов проксями к результату
 		# ===================
-		print(
+		print(self.NAME + 
 			coloring(
 				"Итоговое количество проксей {0}, ".format(len(proxies)),
 				""
@@ -246,7 +247,7 @@ class Parsing(Data):
 			end=""
 			)
 		proxies = set(proxies)
-		print(
+		print(self.NAME + 
 			coloring(
 				"из которых {0} уникальные.".format(len(proxies)),
 				"green"
@@ -291,7 +292,7 @@ class Parsing(Data):
 							else:
 								continue
 						except:
-							print(
+							print(self.NAME + 
 								coloring(
 									"Не удалось обработать файл {0}, но распаковка прошла успешно.".format(i2),
 									"yellow"
@@ -300,7 +301,7 @@ class Parsing(Data):
 							continue
 						# ===================
 						else:
-							print(
+							print(self.NAME + 
 								coloring(
 									"Удалось успешно прочесть .txt файл! \n Получено {0} проксей.".format(len(proxy_list)),
 									"green"
@@ -314,11 +315,11 @@ class Parsing(Data):
 									try:
 										os.remove(i)
 									except:
-										print(coloring("Ошибка очистки каталога загрузок!", "red"))
-										input("Удалите все не .zip файлы и нажмите энтер...")
+										print(self.NAME + coloring("Ошибка очистки каталога загрузок!", "red"))
+										input(self.NAME + "Удалите все не .zip файлы и нажмите энтер...")
 				# ===================
 				except:
-					print(
+					print(self.NAME + 
 						coloring(
 							"Не удалось распаковать загруженный архив: {0}".format(i),
 							"red"
@@ -332,11 +333,11 @@ class Parsing(Data):
 							try:
 								os.remove(i)
 							except:
-								print(coloring("Ошибка очистки каталога загрузок downloads!", "red"))
-								input("Удалите все не .zip файлы и нажмите энтер...")
+								print(self.NAME + coloring("Ошибка очистки каталога загрузок downloads!", "red"))
+								input(self.NAME + "Удалите все не .zip файлы и нажмите энтер...")
 				# ===================
 		# ===================
-		print(
+		print(self.NAME + 
 			coloring(
 				"Удалось успешно распаковать скачанные архивы! \n Получено {0} проксей, из них ".format(len(proxy_list)),
 				""
@@ -352,11 +353,11 @@ class Parsing(Data):
 				"green"
 				)
 			)
-		print(badtryes * 
+		print(badtryes * (self.NAME + 
 			coloring(
 				"Не удалось распаковать или обработать {0} архивов.".format(str(badtryes)),
 				"red"
-				),
+				)),
 			end= bool(badtryes) * "\n"
 			)
 		# ===================
@@ -364,8 +365,8 @@ class Parsing(Data):
 			try:
 				os.remove(i)
 			except:
-				print(coloring("Ошибка очистки каталога загрузок!", "red"))
-				input("Удалите папку downloads и нажмите энтер...")
+				print(self.NAME + coloring("Ошибка очистки каталога загрузок!", "red"))
+				input(self.NAME + "Удалите папку downloads и нажмите энтер...")
 		# ===================
 		os.chdir("..")  # возвращение в рабочую директорию
 		os.rmdir("downloads")  # удаление папки, куда скачивались архивы

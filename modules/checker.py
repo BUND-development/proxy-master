@@ -39,10 +39,11 @@ class Check():
 		self.output = []
 		self.banned = []
 		self.died = []
+		self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 		# загрузка настроек
 		with open("settings.ini", mode="r") as file:
 			settings = json.load(file)
-			print(coloring("Настройки загружены!", "green"))
+			print(self.NAME + coloring("Настройки загружены!", "green"))
 			self.BOARD = settings["BOARD"]
 			self.MAXTRIES = settings["MAXTRIES"]
 			self.TIMEOUT = settings["TIMEOUT"]
@@ -67,20 +68,25 @@ class Check():
 		while len(lst):
 			#print(os.getpid())
 			if len(lst) == 0:
-				print("Выход из потока...")
+				print(self.NAME + "Выход из потока...")
 			i = lst.pop()
+			
 			proxy = {"https": self.protocol + "://" + i}
 			try:
 				req = backoff.on_exception(backoff.expo, exceptions.ConnectionError, max_tries=self.MAXTRIES, jitter=None, max_time=25)(_post)  # обработка исключений
 				# отправка запроса на [данные удалены] для проверки на постинг
 				response = json.loads(req("https://5.61.239.35/makaba/makaba.fcgi?json=1", data=params, proxies=proxy, timeout=self.TIMEOUT, headers=self.headers, verify=False).text)
 			except KeyboardInterrupt:
-				print(coloring("Принудительный выход...", "yellow"))
+				print(self.NAME + coloring("Принудительный выход...", "yellow"))
 				break
 			except:
+				print(self.NAME + coloring("[{0} проксей осталось] ".format(str(len(lst))), "green"
+				), end="")
 				print("Нерабочая прокси {0}".format(i))
 				died.append(i)
 			else:
+				print(self.NAME + coloring("[{0} проксей осталось] ".format(str(len(lst))), "green"
+				), end="")
 				if response['message'] == 'Тред не существует.':
 					print(coloring("Найдена прокси в бане {0}".format(i), "red"))
 					banned.append(i)
@@ -91,17 +97,17 @@ class Check():
 					print(coloring("Нестандартный ответ ({0})".format(str(response)), "yellow"))
 					
 	def get_board(self):
-		print("Получение списка тредов...")
+		print(self.NAME + "Получение списка тредов...")
 		try:
 			# создание запроса с обработкой исключений с помощью backoff
 			req = backoff.on_exception(backoff.expo, exceptions.ConnectionError, max_tries = 10, jitter = None, max_time = 30)(_get)
 			# получение каталога тредов
 			answ = json.loads(req(''.join(["https://2ch.hk/" + self.BOARD + "/catalog.json"]), verify=False, timeout=30).text)
 		except:
-			print('Ошибка загрузки тредов!')
+			print(self.NAME + 'Ошибка загрузки тредов!')
 			exit(0)
 		else:
-			print('Треды загружены успешно!')
+			print(self.NAME + 'Треды загружены успешно!')
 		return answ
 
 
@@ -123,12 +129,16 @@ class Check():
 				# пингование 2ch.hk, можно поменять на любой живой сайт
 				answ = req(''.join(self.WEBFORPING), proxies=proxy, timeout=self.TIMEOUT, verify=False)
 			except KeyboardInterrupt:
-				print(coloring("Принудительный выход...", "yellow"))
+				print(self.NAME + coloring("Принудительный выход...", "yellow"))
 				break
 			except:
+				print(self.NAME + coloring("[{0} проксей осталось] ".format(str(len(lst))), "green"
+				), end="")
 				print(coloring("Нерабочая прокси {0}".format(i), "yellow"))
 				died.append(i)
 			else:
+				print(self.NAME + coloring("[{0} проксей осталось] ".format(str(len(lst))), "green"
+				), end="")
 				print(coloring("Найдена рабочая прокси {0}".format(i), "green"))
 				output.append(i)
 
@@ -141,7 +151,7 @@ class Check():
 			died = manager.list(self.died)  # создание списка мертвых проксей
 			banned = manager.list(self.banned)  # создание списка проксей в бане
 			if self.post_check2ch:
-				print("Инициирована проверка на баны.")
+				print(self.NAME + "Инициирована проверка на баны.")
 				threads_list = Check.list_of_posts(self)
 			procs = []  # массив с потоками
 			for i in range(0, self.THREADS_MULTIPLIER):
@@ -161,17 +171,17 @@ class Check():
 			self.output = list(output)
 			self.banned = list(banned)
 			self.died = list(died)
-		print(coloring("Потоки завершились!", "green"))
+		print(self.NAME + coloring("Потоки завершились!", "green"))
 		# записи в txt
 		if self.post_check2ch:
 			with open("banned.txt", mode="w", encoding="UTF-8") as file:
 				for i in self.banned:
 					file.write(i + "\n")
-			print(coloring("Записаны прокси в бане в banned.txt", "green"))
+			print(self.NAME + coloring("Записаны прокси в бане ({0}) в banned.txt".format(str(len(self.banned))), "green"))
 		with open("died.txt", mode="w", encoding="UTF-8") as file:
 			for i in self.died:
 				file.write(i + "\n")
-			print(coloring("Записаны мертвые прокси в died.txt", "green"))
+			print(self.NAME + coloring("Записаны нерабочие прокси ({0}) в died.txt".format(str(len(self.died))), "green"))
 
 		return self.output
 

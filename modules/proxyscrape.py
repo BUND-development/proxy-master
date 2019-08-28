@@ -12,6 +12,7 @@ class ProxyScrape():
 		self.parametrs = {
 		"request": "getproxies"
 		}
+		#self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 
 
 	def start(self):
