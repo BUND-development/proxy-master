@@ -65,6 +65,7 @@ class Main():
 			self.COUNTRIES = settings["COUNTRIES"]  # фильтровать по странам
 			self.CHECK = settings["CHECK"] # проверять на работоспособность
 			self.CHECKON2CH = settings["CHECKON2CH"]  # проверять на бан на 2ch.hk
+			self.PROTOCOLOUT = settings["PROTOCOLOUT"]  # записывать прокси в формате протокол://прокси:порт
 			self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 		
 	def main(self):
@@ -127,7 +128,10 @@ class Main():
 				pass
 			print(self.NAME + "Всего {0} прокси-серверов.".format(str(len(self.export))))
 			for i in self.export:
-				file.write(str(i) + "\n")
+				if self.PROTOCOLOUT:
+					file.write(self.TYPE + "://" + str(i) + "\n")
+				else:
+					file.write(str(i) + "\n")
 
 	def geting(self):
 		with open("settings.ini", mode="r", encoding="utf-8") as file:
@@ -164,6 +168,7 @@ class Main():
 			if (self.TYPE != "http") and (self.TYPE != "https") and (self.TYPE != "socks4") and (self.TYPE != "socks5"):
 				print(self.NAME + coloring("Введенный протокол прокси не поддерживается, ты точно ввел его правильно?", "red"))
 				exit(1)
+			#self.PROTOCOLOUT = bool(input(self.NAME + "Записывать прокси на выходе в формате для вайпалки (протокол://XXX.XXX.XXX.XXX:XXX)? True/False> "))
 			# self.PARSE = True  # парсить прокси
 			# self.SUBNETS = True  # фильтрование по подсетям
 			# self.BLACKLIST = True  # блеклист айпи
