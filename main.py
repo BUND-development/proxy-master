@@ -17,7 +17,6 @@ def coloring(string, color):
 	#string = "\x1b[32m[P-M] \x1b[0m" + string
 	return string
 
-from modules import checker
 
 try:
 	from modules import parser, proxyscrape, subnets, blocked, weed, checker
