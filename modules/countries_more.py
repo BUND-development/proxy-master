@@ -13,7 +13,8 @@ import colorama
 colorama.init()
 import os
 from multiprocessing import Process, Lock, Manager
-import multiprocessing
+#import multiprocessing
+
 
 def coloring(string, color):
 	'''Мой мини-модуль для раскрашивания текста'''
@@ -129,9 +130,6 @@ class Main():
 					print(self.NAME + coloring("[{0} проксей осталось] ".format(str(len(lst))), "green"), end="")
 					print(coloring("Найдена рабочая прокси {0}".format(i), "green"))
 					output.append(i)
-
-
-
 
 
 

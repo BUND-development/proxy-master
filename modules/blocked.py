@@ -3,8 +3,6 @@
 import json
 import colorama
 colorama.init()
-from multiprocessing import Process, Lock, Manager
-import multiprocessing
 
 
 def coloring(string, color):
@@ -42,33 +40,16 @@ class Blocked():
 			self.proxies[i] = self.proxies[i].split(":")  # разделение по айпи и портам
 
 	def start(self):
-		if False:  # многопоток не дал результатов, я вырубил его
-			self.output = []
-			with Manager() as manager:
-				lst = manager.list(self.proxies)  # создание списка проксей для многопотока
-				output = manager.list(self.output)
-				procs = []  # массив с потоками
-				for i in range(0, self.THREADS_MULTIPLIER):
-					proc = Process(target=Blocked.filtering_ips, args=(self, lst, output))
-					# стартуем!
-					proc.start()
-					procs.append(proc)
-
-				for pr in procs:
-					# присоединение потока к осовному
-					pr.join()
-				self.proxies = list(output)
+		try:
+			self.proxies = Blocked.filtering_ips_1(self, self.proxies)
+		except KeyboardInterrupt:
+			print(self.NAME + coloring("Принудительный выход...", "red"))
+		except Exception as e:
+			print("Непредвиденная ошибка: {0}".format(e))
+			with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
+				file.write("=====================\n{0}\n".format(str(e)))
 		else:
-			try:
-				self.proxies = Blocked.filtering_ips_1(self, self.proxies)
-			except KeyboardInterrupt:
-				print(self.NAME + coloring("Принудительный выход...", "red"))
-			except Exception as e:
-				print("Непредвиденная ошибка: {0}".format(e))
-				with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
-					file.write("=====================\n{0}\n".format(str(e)))
-			else:
-				pass
+			pass
 
 		self.proxies = Blocked.remove_blocked(self, self.proxies)
 		
@@ -129,3 +110,6 @@ class Blocked():
 			if not ifblocked:
 				output.append(i)
 		return output
+
+if __name__ == '__main__':
+	pass

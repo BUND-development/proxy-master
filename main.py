@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import sys
+import json
+import os
 
+def cls():
+	'''Очистка консоли'''
+	os.system('cls' if os.name=='nt' else 'clear')
 
 def coloring(string, color):
 	'''Мой мини-модуль для раскрашивания текста'''
@@ -14,15 +20,20 @@ def coloring(string, color):
 		string = "\x1b[34m" + string + "\x1b[0m"
 	else:
 		pass
-	#string = "\x1b[32m[P-M] \x1b[0m" + string
 	return string
+
+try:
+	os.system("pip install requests pysocks urllib3 bs4 colorama lxml pygeoip backoff" if os.name=="nt" else "pip3 install --user requests pysocks urllib3 bs4 colorama lxml pygeoip backoff")
+except:
+	pass
+finally:
+	cls()
+
 
 try:
 	from modules import parser, proxyscrape, subnets, blocked, weed, checker, countries_more
 	import colorama
 	colorama.init()
-	import sys
-	import json
 except Exception as e:
 	with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
 		file.write("=====================\n{0}\n".format(str(e)))
@@ -153,8 +164,6 @@ class Main():
 	def geting(self):
 		with open("settings.ini", mode="r", encoding="utf-8") as file:
 			settings = json.load(file)
-
-
 
 		if self.NORMALINPUT:
 			try:

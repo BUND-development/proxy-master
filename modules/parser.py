@@ -19,13 +19,15 @@ def coloring(string, color):
 		pass
 	return string
 # ============================================================
-try:
-	# установка нужных библиотек
-    os.system("pip install requests pysocks urllib3 bs4 colorama lxml pygeoip backoff" if os.name=="nt" else "pip3 install --user requests pysocks urllib3 bs4 colorama lxml pygeoip backoff")
-except:
-    pass
-finally:
-    cls()   # очистка командной строки
+# try:
+# 	# установка нужных библиотек
+#     #os.system("pip install requests pysocks urllib3 bs4 colorama lxml pygeoip backoff" if os.name=="nt" else "pip3 install --user requests pysocks urllib3 bs4 colorama lxml pygeoip backoff")
+#     pass
+# except:
+#     pass
+# finally:
+#     #cls()   # очистка командной строки
+#     pass
 # ============================================================
 try:
 	import requests  # запросы по сети
