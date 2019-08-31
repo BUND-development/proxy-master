@@ -53,7 +53,7 @@ class Check():
 		self.headers = {
 		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.10240",
 		"Origin": "https://2ch.hk",
-		"Referer": "https://2ch.hk/b/",
+		"Referer": "https://2ch.hk/{0}/".format(str(self.BOARD)),
 		"Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
 		"Connection": "close",
 		}

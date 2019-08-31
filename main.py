@@ -17,13 +17,17 @@ def coloring(string, color):
 	#string = "\x1b[32m[P-M] \x1b[0m" + string
 	return string
 
-
 try:
-	from modules import parser, proxyscrape, subnets, blocked, weed, checker
+	from modules import parser, proxyscrape, subnets, blocked, weed, checker, countries_more
 	import colorama
 	colorama.init()
 	import sys
 	import json
+except Exception as e:
+	with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
+		file.write("=====================\n{0}\n".format(str(e)))
+	print(coloring("Не удалось загрузить все модули/библиотеки!", "red"))
+	exit(1)
 except:
 	print(coloring("Не удалось загрузить все модули/библиотеки!", "red"))
 	exit(1)
@@ -39,12 +43,12 @@ def out_logo():
 	print(r" | |      | | \ \  | |__| |  / . \     | |        | |  | |  / ____ \   ____) |    | |    | |____  | | \ \  ")
 	print(r" |_|      |_|  \_\  \____/  /_/ \_\    |_|        |_|  |_| /_/    \_\ |_____/     |_|    |______| |_|  \_\ ")
 	print("")
-	print(r"  __       ____   ")
-	print(r" /_ |     |___ \  ")
-	print(r"  | |       __) | ")
-	print(r"  | |      |__ <  ")
-	print(r"  | |  _   ___) | ")
-	print(r"  |_| (_) |____/  ")          
+	print(r"  __       _  _   ")
+	print(r" /_ |     | || |  ")
+	print(r"  | |     | || |_ ")
+	print(r"  | |     |__   _|")
+	print(r"  | |  _     | |  ")
+	print(r"  |_| (_)    |_|  ")
 	print("\n")             
 	print("\n\n")
 
@@ -65,6 +69,7 @@ class Main():
 			self.CHECK = settings["CHECK"] # проверять на работоспособность
 			self.CHECKON2CH = settings["CHECKON2CH"]  # проверять на бан на 2ch.hk
 			self.PROTOCOLOUT = settings["PROTOCOLOUT"]  # записывать прокси в формате протокол://прокси:порт
+			self.CHECK_ADVANCED = settings["CHECK_ADVANCED"]  # использовать ли сайт 2ip.io как фильтр стран и провайдеров
 			self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 		
 	def main(self):
@@ -106,10 +111,23 @@ class Main():
 			self.export = weed.weed(self.export)
 			print(self.NAME + coloring("Фильтрация по странам закончена.", "green"))
 
+		if self.CHECK_ADVANCED:
+			print(self.NAME + coloring("Фильтрация по ASN началась...", "green"))
+			filtering = countries_more.Main(self.export, self.TYPE)
+			try:
+				self.export = filtering.main_main()
+			except KeyboardInterrupt:
+				print(self.NAME + "Принудительный выход, сохранение...")
+			except Exception as e:
+				print(self.NAME + coloring("Ошибка модуля улучшенного фильтра айпи, просьба отправить BUGREPORT", "red"))
+				with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
+					file.write("=====================\n{0}, type:{1}\n".format(str(e), self.TYPE))
+			else:
+				print(self.NAME + coloring("Фильтрация по ASN закончена.", "green"))
+
 		if self.CHECK:
-			print(coloring(self.NAME + "Проверка на рабоспособность началась...", "green"))
+			print(self.NAME + coloring("Проверка на рабоспособность началась...", "green"))
 			filtering = checker.Check(self.export, self.TYPE, self.CHECKON2CH)
-			#self.export = filtering.main_main()
 			try:
 				self.export = filtering.main_main()
 			except KeyboardInterrupt:
@@ -147,39 +165,12 @@ class Main():
 			if (sys.argv[1] != "http") and (sys.argv[1] != "https") and (sys.argv[1] != "socks4") and (sys.argv[1] != "socks5"):
 				print(self.NAME + coloring("Введенный протокол прокси не поддерживается, ты точно ввел его правильно?", "red"))
 				exit(1)
-			# self.PARSE = True # парсить прокси
-			# self.SUBNETS = True  # фильтрование по подсетям
-			# self.BLACKLIST = True  # блеклист айпи
-			# self.COUNTRIES = True  # фильтровать по странам
-			# self.CHECK = False # проверять на работоспособность
-			# self.CHECKON2CH = True  # проверять на бан на 2ch.hk
-		# статичные параметры для дебага, пока не используются
-		# elif False:  
-		# 	self.TYPE = "http"  # тип прокси
-		# 	self.PARSE = False  # парсить прокси
-		# 	self.SUBNETS = True  # фильтрование по подсетям
-		# 	self.BLACKLIST = True  # блеклист айпи
-		# 	self.COUNTRIES = True  # фильтровать по странам
-		# 	self.CHECK = True  # проверять на работоспособность
-		# 	self.CHECKON2CH = True  # проверять на бан на 2ch.hk
 		else:
 			self.TYPE = input(self.NAME + "Введите протокол прокси> ")
 			if (self.TYPE != "http") and (self.TYPE != "https") and (self.TYPE != "socks4") and (self.TYPE != "socks5"):
 				print(self.NAME + coloring("Введенный протокол прокси не поддерживается, ты точно ввел его правильно?", "red"))
 				exit(1)
-			#self.PROTOCOLOUT = bool(input(self.NAME + "Записывать прокси на выходе в формате для вайпалки (протокол://XXX.XXX.XXX.XXX:XXX)? True/False> "))
-			# self.PARSE = True  # парсить прокси
-			# self.SUBNETS = True  # фильтрование по подсетям
-			# self.BLACKLIST = True  # блеклист айпи
-			# self.COUNTRIES = True  # фильтровать по странам
-			# self.CHECK = False  # проверять на работоспособность
-			# self.CHECKON2CH = True  # проверять на бан на 2ch.hk
-		# self.PARSE = True # парсить прокси
-		# self.SUBNETS = True  # фильтрование по подсетям
-		# self.BLACKLIST = True  # блеклист айпи
-		# self.COUNTRIES = True  # фильтровать по странам
-		# self.CHECK = True # проверять на работоспособность
-		# self.CHECKON2CH = True  # проверять на бан на 2ch.hk
+
 			
 
 
