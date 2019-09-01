@@ -187,4 +187,4 @@ class Check():
 
 
 if __name__ == '__main__':
-	start = Check.start("", "", "")
+	pass

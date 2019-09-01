@@ -4,10 +4,6 @@ import sys
 import json
 import os
 
-def cls():
-	'''Очистка консоли'''
-	os.system('cls' if os.name=='nt' else 'clear')
-
 def coloring(string, color):
 	'''Мой мини-модуль для раскрашивания текста'''
 	if color == "red":
@@ -22,28 +18,6 @@ def coloring(string, color):
 		pass
 	return string
 
-try:
-	os.system("pip install requests pysocks urllib3 bs4 colorama lxml pygeoip backoff" if os.name=="nt" else "pip3 install --user requests pysocks urllib3 bs4 colorama lxml pygeoip backoff")
-except:
-	pass
-finally:
-	cls()
-
-
-try:
-	from modules import parser, proxyscrape, subnets, blocked, weed, checker, countries_more
-	import colorama
-	colorama.init()
-except Exception as e:
-	with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
-		file.write("=====================\n{0}\n".format(str(e)))
-	print(coloring("Не удалось загрузить все модули/библиотеки!", "red"))
-	exit(1)
-except:
-	print(coloring("Не удалось загрузить все модули/библиотеки!", "red"))
-	exit(1)
-else:
-	print(coloring("Все модули и библиотеки успешно загружены!", "green"))
 
 
 def out_logo():
@@ -184,5 +158,25 @@ class Main():
 
 
 if __name__ == "__main__":
+	try:
+		from modules import lib_installer
+	except:
+		pass
+	try:
+		from modules import parser, proxyscrape, subnets, blocked, weed, checker, countries_more
+		import colorama
+		colorama.init()
+	except Exception as e:
+		with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
+			file.write("=====================\n{0}\n".format(str(e)))
+		print(coloring("Не удалось загрузить все модули/библиотеки!", "red"))
+		exit(1)
+	except:
+		print(coloring("Не удалось загрузить все модули/библиотеки!", "red"))
+		exit(1)
+	else:
+		print(coloring("Все модули и библиотеки успешно загружены!", "green"))
+
+
 	start = Main()
 	start.main()

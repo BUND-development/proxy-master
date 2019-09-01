@@ -87,6 +87,7 @@ class Main():
 			return self.output
 
 	def check(self, lst, output, died, blocked):
+		urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 		while len(lst):
 			try:
 				# получени информации об айпи прокси 
@@ -134,5 +135,4 @@ class Main():
 
 
 if __name__ == '__main__':
-	starting = Main()
-	starting.main_main()
+	pass
