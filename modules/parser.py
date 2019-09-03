@@ -65,7 +65,7 @@ class Data():
 			"http://www.sslproxies24.top/"
 			)
 		self.SOMELINKS = "something.txt" # файл, нужный для дебаггинга
-		self.TIMEOUT = (30, 50)
+		self.TIMEOUT = 30
 		self.DOWNLOADTIMEOUT = 10
 		self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 		#self.SLEEPTIME = random.randint(10, 30)  # приостановка программы перед следующим запросом

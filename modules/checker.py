@@ -171,17 +171,25 @@ class Check():
 			self.output = list(output)
 			self.banned = list(banned)
 			self.died = list(died)
-		print(self.NAME + coloring("Потоки завершились!", "green"))
-		# записи в txt
-		if self.post_check2ch:
-			with open("banned.txt", mode="w", encoding="UTF-8") as file:
-				for i in self.banned:
+		
+		# у меня один раз крашнулся модуль проверки, причину я так и не нашел. поэтому пусть этой будет пока тут.
+		try:
+			print(self.NAME + coloring("Потоки завершились!", "green"))
+			# записи в txt
+			if self.post_check2ch:
+				with open("banned.txt", mode="w", encoding="UTF-8") as file:
+					for i in self.banned:
+						file.write(i + "\n")
+				print(self.NAME + coloring("Записаны прокси в бане ({0}) в banned.txt".format(str(len(self.banned))), "green"))
+			with open("died.txt", mode="w", encoding="UTF-8") as file:
+				for i in self.died:
 					file.write(i + "\n")
-			print(self.NAME + coloring("Записаны прокси в бане ({0}) в banned.txt".format(str(len(self.banned))), "green"))
-		with open("died.txt", mode="w", encoding="UTF-8") as file:
-			for i in self.died:
-				file.write(i + "\n")
-			print(self.NAME + coloring("Записаны нерабочие прокси ({0}) в died.txt".format(str(len(self.died))), "green"))
+				print(self.NAME + coloring("Записаны нерабочие прокси ({0}) в died.txt".format(str(len(self.died))), "green"))
+		
+		except Exception as e:
+			print("Ошибка {0}! Просьба написать на почту если вы видите это сообщение!".format(e))
+			with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
+				file.write("=====================\n {0}".format(e))
 
 		return self.output
 

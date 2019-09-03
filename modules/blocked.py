@@ -54,7 +54,13 @@ class Blocked():
 		self.proxies = Blocked.remove_blocked(self, self.proxies)
 		
 		for i in range(0, len(self.proxies)):
-			self.proxies[i] = self.proxies[i][0] + ":" + self.proxies[i][1]
+			try:
+				self.proxies[i] = self.proxies[i][0] + ":" + self.proxies[i][1]
+			except Exception as e:
+				print(self.NAME + coloring("Непредвиденная ошибка: {0}".format(e), "red"))
+				with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
+					file.write("=====================\n{0}\n proxy: {1}\n".format(str(e), str(self.proxies[i])))
+			continue
 		
 		return self.proxies
 
@@ -65,6 +71,8 @@ class Blocked():
 				if i[0] == j[0]:
 					print(self.NAME + coloring("Найден повторяющийся айпи в прокси {0}, удаление...".format(i[0] + ":" + i[1]), "yellow"))
 					break
+				elif i == "":
+					break
 				else:
 					pass
 			else:
@@ -73,6 +81,7 @@ class Blocked():
 
 
 	def filtering_ips(self, lst, output):
+		'''Удаление повторяющихся айпи '''
 		while len(lst):
 			try:
 				i = lst.pop()
@@ -89,9 +98,11 @@ class Blocked():
 					file.write("=====================\n{0}\n".format(str(e)))
 			else:
 				for j in output:
-					if i[0] == j[0]:
+					if i[0] == j[0]:  
 						print(coloring("[{0} проксей осталось] ".format(str(len(lst))), "green"), end="")
 						print(coloring("Найден повторяющийся айпи в прокси {0}, удаление...".format(i[0] + ":" + i[1]), "yellow"))
+						break
+					if i == "":  # заодно добавил фильтр на мусор
 						break
 				else:
 					output.append(i)
@@ -101,13 +112,15 @@ class Blocked():
 	def remove_blocked(self, proxylist):
 		output = []
 		for i in proxylist:
-			ifblocked = False
 			for i2 in self.blacklist:
 				if i[0] == i2:
 					print(self.NAME + "Найдена прокси, находящийся в айпи-блеклисте {0}".format(i[0] + ":" + i[1]))
-					ifblocked = True
 					break
-			if not ifblocked:
+				elif i == '':
+					break
+				else:
+					pass
+			else:
 				output.append(i)
 		return output
 

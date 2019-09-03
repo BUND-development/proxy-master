@@ -117,8 +117,10 @@ class Main():
 				self.export = filtering.main_main()
 			except KeyboardInterrupt:
 				print(self.NAME + "Принудительный выход, сохранение...")
-			except:
+			except Exception as e:
 				print(self.NAME + coloring("Ошибка модуля проверки на постинг, просьба написать об этом на почту", "red"))
+				with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
+					file.write("=====================\n {0}".format(e))
 			else:
 				print(self.NAME + coloring("Проверка на рабоспособность закончена.", "green"))
 
