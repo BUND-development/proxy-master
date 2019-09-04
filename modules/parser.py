@@ -5,31 +5,13 @@ def cls():
 	'''Очистка консоли'''
 	os.system('cls' if os.name=='nt' else 'clear')
 # ============================================================
-def coloring(string, color):
-	'''Мой мини-модуль для раскрашивания текста'''
-	if color == "red":
-		string = "\x1b[31m" + string + "\x1b[0m"
-	elif color == "green":
-		string = "\x1b[32m" + string + "\x1b[0m"
-	elif color == "yellow":
-		string = "\x1b[33m" + string + "\x1b[0m"
-	elif color == "blue":
-		string = "\x1b[34m" + string + "\x1b[0m"
-	else:
-		pass
-	return string
-# ============================================================
-# try:
-# 	# установка нужных библиотек
-#     #os.system("pip install requests pysocks urllib3 bs4 colorama lxml pygeoip backoff" if os.name=="nt" else "pip3 install --user requests pysocks urllib3 bs4 colorama lxml pygeoip backoff")
-#     pass
-# except:
-#     pass
-# finally:
-#     #cls()   # очистка командной строки
-#     pass
 # ============================================================
 try:
+	from modules import coloring
+	coloring = coloring.coloring
+	import json
+	from multiprocessing import Process, Lock, Manager
+	import multiprocessing
 	import requests  # запросы по сети
 	import bs4  # обработка html файлов
 	import re  # регулярные исключения
@@ -66,7 +48,7 @@ class Data():
 			)
 		self.SOMELINKS = "something.txt" # файл, нужный для дебаггинга
 		self.TIMEOUT = 30
-		self.DOWNLOADTIMEOUT = 10
+		self.DOWNLOADTIMEOUT = 20
 		self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 		#self.SLEEPTIME = random.randint(10, 30)  # приостановка программы перед следующим запросом
 
@@ -78,14 +60,11 @@ class Parsing(Data):
 	def __init__(self):
 		super().__init__()
 		self.download_files = []  # список имен zip файлов, которые были скачаны 
-		self.proxies_list = []  # список проксей, спарсенных с самих сайтов
+		#self.proxies_list = []  # список проксей, спарсенных с самих сайтов
 		self.debug_list = []  # список для дебаггинга, в релизных версиях не используется
-
-# ============================================================
-	# метод компоновки единого списка проксей из всех
-	def getting_all(self):
-		'''Пока не используется'''
-		pass
+		with open("settings.ini", mode="r") as file:
+			settings = json.load(file)
+			self.PARSE_THREADS = settings["PARSE_THREADS"]
 
 # ============================================================
 	# получение всех ссылок со страницы
@@ -106,8 +85,13 @@ class Parsing(Data):
 
 # ============================================================
 	# анализирование найденных юрлов
-	def analizing_urls(self, list_urls):
-		for url_name in list_urls:  # проходимся по всем найденным ссылкам
+	def analizing_urls(self, lst, lstOfProxies):
+		while len(lst):  # проходимся по всем найденным ссылкам
+			try:
+				url_name = lst.pop()  # получения ссылки из общего пула
+			except IndexError:
+				print(self.NAME + coloring("Конец потока...", "green"))
+				break
 			# ===================
 			try:
 				answer = requests.get(url_name, timeout=self.TIMEOUT, verify=False)  # получения страницы этой ссылки
@@ -145,30 +129,21 @@ class Parsing(Data):
 								# ===================
 								if (".zip" in download):  # если есть четкая ссылка на .zip файл
 									print(self.NAME + coloring("Обнаружена прямая ссылка на скачивание> {0}".format(str(download)), "green"))
-									# ===================
-									#file = requests.get(download, stream = True)  # скачивание архива
-									#print(coloring(
-										#"Приостановка программы для предотвращения блокировки на {0} секунд".format(str(self.SLEEPTIME)),
-										#"green"
-										#))
-									#time.sleep(self.SLEEPTIME)
 									print(self.NAME + coloring("Скачивание файла...", ""))
-									#self.SLEEPTIME = random.randint(20, 30)
+									# ===================
 									try:
 										file = requests.get(download, timeout=self.DOWNLOADTIMEOUT)
-									except Exception as a:
+									except Exception as e:
 										print(self.NAME + coloring("Ошибка загрузки файла!", "red"))
-										raise a
+										with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
+											file.write("=====================\n {0} , ссылка: {1}".format(e, download))
 									else:
 										print(self.NAME + coloring("Файл успешно загружен в память, идет запись на диск...", ""))
-
 									# ===================
 									filename = os.getcwd() + "/downloads/" + str(random.randint(1, 1000)) + ".zip"  # загрузка архива в папку 
 									# ===================
 									with open(filename, mode="wb") as zipfile:  # запись архива в файл
 										zipfile.write(file.content)  # запись zip файла
-										#print(coloring("Файл сохранен успешно!", "green"))
-										#self.download_files.append(filename)  # запись в список загруженных файлов
 										# ===================
 										print(self.NAME + 
 											coloring(
@@ -201,27 +176,10 @@ class Parsing(Data):
 						)
 					)
 				# ===================			
-				self.proxies_list.extend(proxies_find)  # добавление списка проксей к уже имеющимся прокси
+				lstOfProxies.extend(proxies_find)  # добавление списка проксей к уже имеющимся прокси
 			else:
 				print(self.NAME + coloring("Не найдено проксей на скачанной странице.", "yellow"))
-		# ==============================================
-		print(self.NAME + 
-			coloring(
-				"Всего напарсено с сайтов {0} проксей, ".format(len(self.proxies_list)),
-				""
-				),
-			end=""
-			)
-		# ===================
-		self.proxies_list = set(self.proxies_list)  # опять очистка от дублей
-		print(
-			coloring(
-				"из них {0} уникальные.".format(len(self.proxies_list)),
-				"green"
-				)
-			)
-		# ===================
-		return self.proxies_list  # возвращаем список проксей
+		
 
 # ============================================================
 	def parsing(self):
@@ -237,7 +195,27 @@ class Parsing(Data):
 		for url in self.MAINURLS:
 			list_p.extend(Parsing.get_links(self, url))  # получение ссылок
 		# ===================
-		proxies.extend(Parsing.analizing_urls(self, list_p))  # получение списка проксей
+		#proxies.extend(Parsing.analizing_urls(self, list_p))  # получение списка проксей
+		try:
+			with Manager() as manager:
+				lstOfProxies = manager.list(proxies)  # создание списка проксей между потоками
+				lst = manager.list(list_p)  # тоже самое, но только со списком юрлов
+				procs = []
+				for i in range(0, self.PARSE_THREADS):
+					proc = Process(target=Parsing.analizing_urls, args=(self, lst, lstOfProxies))
+					proc.start()
+					procs.append(proc)
+
+				for pr in procs:
+					# присоединение потока к осовному
+					pr.join()
+				print(self.NAME + coloring("Парсинг проксей с ссылок закончен.", "green"))
+				proxies.extend(lstOfProxies)
+
+		except Exception as e:
+			print(self.NAME + coloring("Критическая ошибка модуля анализа юрлов!", "red"))
+			with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
+				file.write("=====================\n {0}".format(e))
 		# ===================
 		proxies.extend(Parsing.open_archives(self))  # добавление архивов проксями к результату
 		# ===================
@@ -249,16 +227,13 @@ class Parsing(Data):
 			end=""
 			)
 		proxies = set(proxies)
-		print(self.NAME + 
+		print(
 			coloring(
 				"из которых {0} уникальные.".format(len(proxies)),
 				"green"
 				)
 			)
 		return proxies
-		#with open(self.FILENAME, mode="w", encoding="UTF-8") as file:
-			#for i in proxies:
-				#file.write(i + "\n")
 
 # ============================================================
 	def open_archives(self):
@@ -341,7 +316,7 @@ class Parsing(Data):
 		# ===================
 		print(self.NAME + 
 			coloring(
-				"Удалось успешно распаковать скачанные архивы! \n Получено {0} проксей, из них ".format(len(proxy_list)),
+				"Удалось успешно распаковать скачанные архивы!\n" + self.NAME + "Получено {0} проксей, из них ".format(len(proxy_list)),
 				""
 				),
 			end=""

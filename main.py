@@ -4,19 +4,19 @@ import sys
 import json
 import os
 
-def coloring(string, color):
-	'''Мой мини-модуль для раскрашивания текста'''
-	if color == "red":
-		string = "\x1b[31m" + string + "\x1b[0m"
-	elif color == "green":
-		string = "\x1b[32m" + string + "\x1b[0m"
-	elif color == "yellow":
-		string = "\x1b[33m" + string + "\x1b[0m"
-	elif color == "blue":
-		string = "\x1b[34m" + string + "\x1b[0m"
-	else:
-		pass
-	return string
+# def coloring(string, color):
+# 	'''Мой мини-модуль для раскрашивания текста'''
+# 	if color == "red":
+# 		string = "\x1b[31m" + string + "\x1b[0m"
+# 	elif color == "green":
+# 		string = "\x1b[32m" + string + "\x1b[0m"
+# 	elif color == "yellow":
+# 		string = "\x1b[33m" + string + "\x1b[0m"
+# 	elif color == "blue":
+# 		string = "\x1b[34m" + string + "\x1b[0m"
+# 	else:
+# 		pass
+# 	return string
 
 
 
@@ -55,6 +55,7 @@ class Main():
 			self.CHECKON2CH = settings["CHECKON2CH"]  # проверять на бан на 2ch.hk
 			self.PROTOCOLOUT = settings["PROTOCOLOUT"]  # записывать прокси в формате протокол://прокси:порт
 			self.CHECK_ADVANCED = settings["CHECK_ADVANCED"]  # использовать ли сайт 2ip.io как фильтр стран и провайдеров
+			self.SAME_FILTERING = settings["SAME_FILTERING"]
 			self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 		
 	def main(self):
@@ -85,11 +86,11 @@ class Main():
 			self.export = filtering.start()
 			print(self.NAME + coloring("Фильтрация подсетей закончена.", "green"))
 		
-		if self.BLACKLIST:
-			print(self.NAME + coloring("Удаление одинаковых айпи началось...", "green"))
-			filtering = blocked.Blocked(self.export)
+		if self.BLACKLIST or self.SAME_FILTERING:
+			print(self.NAME + coloring("Фильтрация проксей началась...", "green"))
+			filtering = blocked.Blocked(self.export, self.BLACKLIST, self.SAME_FILTERING)
 			self.export = filtering.start()
-			print(self.NAME + coloring("Удаление одинаковых айпи закончено.", "green"))
+			print(self.NAME + coloring("Фильтрация проксей началась.", "green"))
 
 		if self.COUNTRIES:
 			print(self.NAME + coloring("Фильтрация по странам началась...", "green"))
@@ -162,6 +163,8 @@ class Main():
 if __name__ == "__main__":
 	try:
 		from modules import lib_installer
+		from modules import coloring
+		coloring = coloring.coloring
 	except:
 		pass
 	try:
