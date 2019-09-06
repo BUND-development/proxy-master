@@ -51,7 +51,7 @@ class FilteringSubnets():
 		for i in lst2:
 			valid = True
 			for i2 in i[0]:
-				if int(i2) > 255 or int(i2) < 0:
+				if int(i2) > 255 or int(i2) < 0 or (i2[0] == "0" or i2[0:2] == "00"):
 					valid = False
 					print(self.NAME + "Найден невалидный блок прокси {0}".format(i2))
 					break

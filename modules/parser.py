@@ -69,7 +69,13 @@ class Parsing(Data):
 # ============================================================
 	# получение всех ссылок со страницы
 	def get_links(self, url):
-		results = requests.get(url, timeout=20, verify=False)  # поулчение страницы
+		try:
+			results = requests.get(url, timeout=25, verify=False)  # поулчение страницы
+		except Exception as e:
+			print(self.NAME + coloring("Ошибка подключения! Проверьте соединение с сетью!", "red"))
+			with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
+				file.write("\n================\n {0} \n".format(e))
+				raise e
 		results = bs4.BeautifulSoup(results.text, "lxml")  # создание объекта супа из html страницы
 		results = results.find_all('a')  # получения списка всех ссылок
 		links = []  # список самих ссылок
@@ -193,7 +199,12 @@ class Parsing(Data):
 			pass
 		# ===================
 		for url in self.MAINURLS:
-			list_p.extend(Parsing.get_links(self, url))  # получение ссылок
+			try:
+				list_p.extend(Parsing.get_links(self, url))  # получение ссылок
+			except Exception as e:
+				print(self.NAME + coloring("Ошибка подключения! Проверьте соединение с сетью!", "red"))
+				with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
+					file.write("\n================\n {0} \n".format(e))
 		# ===================
 		#proxies.extend(Parsing.analizing_urls(self, list_p))  # получение списка проксей
 		try:
