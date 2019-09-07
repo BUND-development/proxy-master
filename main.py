@@ -80,17 +80,18 @@ class Main():
 				))
 			self.export.extend(_)  # добавление проксей
 		
-		if self.SUBNETS:
-			print(self.NAME + coloring("Фильтрация подсетей начата...", "green"))
-			filtering = subnets.FilteringSubnets(self.export)
-			self.export = filtering.start()
-			print(self.NAME + coloring("Фильтрация подсетей закончена.", "green"))
-		
 		if self.BLACKLIST or self.SAME_FILTERING:
 			print(self.NAME + coloring("Фильтрация проксей началась...", "green"))
 			filtering = blocked.Blocked(self.export, self.BLACKLIST, self.SAME_FILTERING)
 			self.export = filtering.start()
 			print(self.NAME + coloring("Фильтрация проксей началась.", "green"))
+
+
+		if self.SUBNETS:
+			print(self.NAME + coloring("Фильтрация подсетей начата...", "green"))
+			filtering = subnets.FilteringSubnets(self.export)
+			self.export = filtering.start()
+			print(self.NAME + coloring("Фильтрация подсетей закончена.", "green"))
 
 		if self.COUNTRIES:
 			print(self.NAME + coloring("Фильтрация по странам началась...", "green"))
