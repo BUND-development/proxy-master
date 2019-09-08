@@ -86,7 +86,6 @@ class Main():
 			self.export = filtering.start()
 			print(self.NAME + coloring("Фильтрация проксей началась.", "green"))
 
-
 		if self.SUBNETS:
 			print(self.NAME + coloring("Фильтрация подсетей начата...", "green"))
 			filtering = subnets.FilteringSubnets(self.export)

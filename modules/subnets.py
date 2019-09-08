@@ -8,7 +8,7 @@ class FilteringSubnets():
 	''' Алгоритм и часть кода взята отсюда: http://qaru.site/questions/76775/how-can-i-check-if-an-ip-is-in-a-network-in-python'''
 
 	def __init__(self, proxies):
-		self.proxies = proxies
+		self.proxies = list(proxies)
 		self.subnets = []
 		self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 		with open("texts/subnets.txt", mode="r") as file:
@@ -37,12 +37,16 @@ class FilteringSubnets():
 		# r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+"
 		lst2 = []
 		output = []
-		# дальше баги
 		for i in lst:
-			if re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+", i):  # если айпи подходит под шаблон
-				lst2.append(i)
-			else:
-				print(self.NAME + "Найдена невалидная прокси {0}".format(i))
+			try:
+				if re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+", str(i)):  # если айпи подходит под шаблон
+					lst2.append(str(i))
+				else:
+					print(self.NAME + "Найдена невалидная прокси {0}".format(i))
+			except Exception as e:
+				print(self.NAME + "Ошибка! Просьба отправить BUGREPORT на почту или отписаться в тред")
+				with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
+					file.write("\n====================\n {0} \n proxy: {1}".format(e, str(i)))
 			
 		for i in range(0, len(lst2)):
 			lst2[i] = lst2[i].split(":")  # разделение на айпи и порт
