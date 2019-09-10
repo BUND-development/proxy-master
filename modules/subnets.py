@@ -19,9 +19,6 @@ class FilteringSubnets():
 		print(self.NAME + "Фильтрование подсетей...")
 
 	def start(self):
-		# проверка на валидность прокси
-		self.proxies = FilteringSubnets.check_for_valid(self, self.proxies)  # удаление невалидных прокси
-		# дальше баги
 		for i in range(0, len(self.proxies)):
 			self.proxies[i] = self.proxies[i].split(":")  # разделение на айпи и порт
 
@@ -33,41 +30,6 @@ class FilteringSubnets():
 		
 		return self.proxies
 
-	def check_for_valid(self, lst):
-		# r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+"
-		lst2 = []
-		output = []
-		for i in lst:
-			try:
-				if re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+", str(i)):  # если айпи подходит под шаблон
-					lst2.append(str(i))
-				else:
-					print(self.NAME + "Найдена невалидная прокси {0}".format(i))
-			except Exception as e:
-				print(self.NAME + "Ошибка! Просьба отправить BUGREPORT на почту или отписаться в тред")
-				with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
-					file.write("\n====================\n {0} \n proxy: {1}".format(e, str(i)))
-			
-		for i in range(0, len(lst2)):
-			lst2[i] = lst2[i].split(":")  # разделение на айпи и порт
-			lst2[i][0] = lst2[i][0].split(".")
-			
-		for i in lst2:
-			valid = True
-			for i2 in i[0]:
-				if (int(i2) > 255 or int(i2) < 0) or (len(i2)>= 2 and (i2[0] == "0" or i2[0:2] == "00")):
-					valid = False
-					print(self.NAME + "Найден невалидный блок прокси {0}".format(i2))
-					break
-			if valid:
-				output.append(i)
-			
-		for i in range(0, len(output)):
-			# i = [['77', '69', '23', '183'], '4145']
-			ip = output[i][0][0] + '.' + output[i][0][1] + '.' + output[i][0][2] + '.' + output[i][0][3] + ":" + output[i][1]
-			output[i] = ip
-
-		return output
 
 	def addressInNetwork(self, proxylist):
 		output = []
@@ -83,9 +45,8 @@ class FilteringSubnets():
 						pass
 				except ValueError:
 					print(self.NAME + "Удален невалидный айпи ({0})".format(i[0]))
-				except:
-					input(self.NAME + "Необработанная ошибка!")
-					print(proxylist[i])
+				except Exception as e:
+					print(self.NAME + "Необработанная ошибка!")
 				else:
 					pass
 			if not ifinsubnet:

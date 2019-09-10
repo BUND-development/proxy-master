@@ -11,6 +11,7 @@ try:
 	coloring = coloring.coloring
 	import json
 	from multiprocessing import Process, Lock, Manager
+	from modules import logwrite
 	import multiprocessing
 	import requests  # запросы по сети
 	import bs4  # обработка html файлов
@@ -74,7 +75,7 @@ class Parsing(Data):
 		except Exception as e:
 			print(self.NAME + coloring("Ошибка подключения! Проверьте соединение с сетью!", "red"))
 			with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
-				file.write("\n================\n {0} \n".format(e))
+				file.write("\n========parser========\n {0} \n".format(e))
 				raise e
 		results = bs4.BeautifulSoup(results.text, "lxml")  # создание объекта супа из html страницы
 		results = results.find_all('a')  # получения списка всех ссылок
@@ -141,8 +142,7 @@ class Parsing(Data):
 										file = requests.get(download, timeout=self.DOWNLOADTIMEOUT)
 									except Exception as e:
 										print(self.NAME + coloring("Ошибка загрузки файла!", "red"))
-										with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
-											file.write("=====================\n {0} , ссылка: {1}".format(e, download))
+										logwrite.log(e, "parser", link=str(download))
 									else:
 										print(self.NAME + coloring("Файл успешно загружен в память, идет запись на диск...", ""))
 									# ===================
@@ -203,8 +203,7 @@ class Parsing(Data):
 				list_p.extend(Parsing.get_links(self, url))  # получение ссылок
 			except Exception as e:
 				print(self.NAME + coloring("Ошибка подключения! Проверьте соединение с сетью!", "red"))
-				with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
-					file.write("\n================\n {0} \n".format(e))
+				logwrite.log(e, "parser", name="ошибка подключения")
 		# ===================
 		#proxies.extend(Parsing.analizing_urls(self, list_p))  # получение списка проксей
 		try:
@@ -225,8 +224,7 @@ class Parsing(Data):
 
 		except Exception as e:
 			print(self.NAME + coloring("Критическая ошибка модуля анализа юрлов!", "red"))
-			with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
-				file.write("=====================\n {0}".format(e))
+			logwrite.log(e, "parser", name="многопоток обосрался")
 		# ===================
 		proxies.extend(Parsing.open_archives(self))  # добавление архивов проксями к результату
 		# ===================

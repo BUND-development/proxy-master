@@ -14,6 +14,7 @@ colorama.init()
 import os
 from multiprocessing import Process, Lock, Manager
 #import multiprocessing
+from modules import logwrite
 
 from modules import coloring
 coloring = coloring.coloring
@@ -116,10 +117,8 @@ class Main():
 				# получение ASN
 				try:
 					AsnOfProxy = answ["org"].split(" ")[0]
-				except:
-					print(self.NAME + coloring("Нестандартный ответ: {0}".format(str(answ)), "red"))
-					with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
-						file.write("=====================\n прокси: {0}, ответ: {1}\n".format(str(i), str(answ)))
+				except Exception as e:
+					logwrite.log(e, "countries_more", er=str(answ))
 					continue
 
 				for j in self.ASN:

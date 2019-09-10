@@ -55,7 +55,8 @@ class Main():
 			self.CHECKON2CH = settings["CHECKON2CH"]  # проверять на бан на 2ch.hk
 			self.PROTOCOLOUT = settings["PROTOCOLOUT"]  # записывать прокси в формате протокол://прокси:порт
 			self.CHECK_ADVANCED = settings["CHECK_ADVANCED"]  # использовать ли сайт 2ip.io как фильтр стран и провайдеров
-			self.SAME_FILTERING = settings["SAME_FILTERING"]
+			self.SAME_FILTERING = settings["SAME_FILTERING"] # фильтровать похожее
+			self.CHECK2IP = settings["CHECK2IP"]
 			self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 		
 	def main(self):
@@ -67,6 +68,10 @@ class Main():
 				self.export.remove("")
 			except:
 				pass
+		if False:
+			print("БЛЯТЬ ДЕБАГ ВЫКЛЮЧИ!")
+			for i in range(0, len(self.export)):
+				self.export[i] = self.export[i][9:]
 		
 		if self.PARSE:
 			proxy1 = parser.Parsing()  # инициализация класса парсинга
@@ -80,9 +85,14 @@ class Main():
 				))
 			self.export.extend(_)  # добавление проксей
 		
-		if self.BLACKLIST or self.SAME_FILTERING:
+		print(self.NAME + coloring("Удаление невалидных проксей...", "green"))
+		filtering = removeshit.Main(self.export, self.SAME_FILTERING)
+		self.export = filtering.start()
+		print(self.NAME + coloring("Удаление невалидных проксей закончено.", "green"))
+		
+		if self.BLACKLIST:
 			print(self.NAME + coloring("Фильтрация проксей началась...", "green"))
-			filtering = blocked.Blocked(self.export, self.BLACKLIST, self.SAME_FILTERING)
+			filtering = blocked.Blocked(self.export)
 			self.export = filtering.start()
 			print(self.NAME + coloring("Фильтрация проксей началась.", "green"))
 
@@ -91,6 +101,12 @@ class Main():
 			filtering = subnets.FilteringSubnets(self.export)
 			self.export = filtering.start()
 			print(self.NAME + coloring("Фильтрация подсетей закончена.", "green"))
+
+		if self.CHECK2IP:
+			print(self.NAME + coloring("Фильтрация по 2ip началась...", "green"))
+			filtering = ip2.Main(self.export)
+			self.export = filtering.start()
+			print(self.NAME + coloring("Фильтрация по 2ip закончена.", "green"))
 
 		if self.COUNTRIES:
 			print(self.NAME + coloring("Фильтрация по странам началась...", "green"))
@@ -106,8 +122,7 @@ class Main():
 				print(self.NAME + "Принудительный выход, сохранение...")
 			except Exception as e:
 				print(self.NAME + coloring("Ошибка модуля улучшенного фильтра айпи, просьба отправить BUGREPORT", "red"))
-				with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
-					file.write("=====================\n{0}, type:{1}\n".format(str(e), self.TYPE))
+				logwrite.log(e, "main", line="CHECK_ADVANCED")
 			else:
 				print(self.NAME + coloring("Фильтрация по ASN закончена.", "green"))
 
@@ -120,8 +135,7 @@ class Main():
 				print(self.NAME + "Принудительный выход, сохранение...")
 			except Exception as e:
 				print(self.NAME + coloring("Ошибка модуля проверки на постинг, просьба написать об этом на почту", "red"))
-				with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
-					file.write("=====================\n {0}".format(e))
+				logwrite.log(e, "main", line="CHECK")
 			else:
 				print(self.NAME + coloring("Проверка на рабоспособность закончена.", "green"))
 
@@ -162,13 +176,14 @@ class Main():
 
 if __name__ == "__main__":
 	try:
+		from modules import logwrite
 		from modules import lib_installer
 		from modules import coloring
 		coloring = coloring.coloring
 	except:
 		pass
 	try:
-		from modules import parser, proxyscrape, subnets, blocked, weed, checker, countries_more
+		from modules import parser, proxyscrape, subnets, blocked, weed, checker, countries_more, ip2, removeshit
 		import colorama
 		colorama.init()
 	except Exception as e:

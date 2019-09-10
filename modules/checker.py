@@ -15,23 +15,11 @@ from multiprocessing import Process, Lock, Manager
 import multiprocessing
 from modules import coloring
 coloring = coloring.coloring
+from modules import logwrite
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # отключение уведомления о небезопасном соединении
 
 
-# def coloring(string, color):
-# 	'''Мой мини-модуль для раскрашивания текста'''
-# 	if color == "red":
-# 		string = "\x1b[31m" + string + "\x1b[0m"
-# 	elif color == "green":
-# 		string = "\x1b[32m" + string + "\x1b[0m"
-# 	elif color == "yellow":
-# 		string = "\x1b[33m" + string + "\x1b[0m"
-# 	elif color == "blue":
-# 		string = "\x1b[34m" + string + "\x1b[0m"
-# 	else:
-# 		pass
-# 	return string
 
 class Check():
 	def __init__(self, proxies, protocol, post_check):
@@ -194,8 +182,7 @@ class Check():
 		
 		except Exception as e:
 			print("Ошибка {0}! Просьба написать на почту если вы видите это сообщение!".format(e))
-			with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
-				file.write("=====================\n {0}".format(e))
+			logwrite.log(e, "checker", name="Ошибка записи в текстовик")
 
 		return self.output
 
