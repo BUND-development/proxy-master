@@ -10,7 +10,7 @@ import urllib3
 import json
 import colorama
 colorama.init()
-
+import urllib3
 from modules import coloring
 coloring = coloring.coloring
 
@@ -39,6 +39,7 @@ class Main(object):
 					break
 
 	def filtering(self, proxyList, output):
+		urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # отключение уведомления о небезопасном соединении
 		while len(proxyList):
 			try:
 				i = proxyList.pop()
