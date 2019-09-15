@@ -2,7 +2,7 @@
 import sys
 import re
 import pygeoip
-
+import configparser
 ''' Модуль взят и модифицирован у LOH2.0'''
 
 def get_states(filename):
@@ -16,7 +16,14 @@ def get_states(filename):
 	return states
 
 def weed(IPs):
-	NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
+	# with configparser.ConfigParser() as config:
+	# 	config.read("settings.ini")
+	# 	NAME = config["main"]["NAME"]
+	config = configparser.ConfigParser()
+	config.read("settings.ini")
+	NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
+	del config
+	
 	states = get_states("texts/countries.txt")
 	gi = pygeoip.GeoIP("texts/GeoIP.dat")
 	export = []

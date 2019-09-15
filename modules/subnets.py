@@ -3,6 +3,9 @@
 import socket,struct
 import ipaddress
 import re
+import configparser
+
+
 
 class FilteringSubnets():
 	''' Алгоритм и часть кода взята отсюда: http://qaru.site/questions/76775/how-can-i-check-if-an-ip-is-in-a-network-in-python'''
@@ -10,7 +13,15 @@ class FilteringSubnets():
 	def __init__(self, proxies):
 		self.proxies = list(proxies)
 		self.subnets = []
-		self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
+		
+		# with configparser.ConfigParser() as config:
+		# 	config.read("settings.ini")
+		# 	self.NAME = config["main"]["NAME"]
+		config = configparser.ConfigParser()
+		config.read("settings.ini")
+		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
+		del config
+		
 		with open("texts/subnets.txt", mode="r") as file:
 			self.subnets = file.read().split("\n")
 			for i in self.subnets:

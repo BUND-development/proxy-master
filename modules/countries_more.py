@@ -18,22 +18,8 @@ from modules import logwrite
 
 from modules import coloring
 coloring = coloring.coloring
+import configparser
 
-
-# def coloring(string, color):
-# 	'''Мой мини-модуль для раскрашивания текста'''
-# 	if color == "red":
-# 		string = "\x1b[31m" + string + "\x1b[0m"
-# 	elif color == "green":
-# 		string = "\x1b[32m" + string + "\x1b[0m"
-# 	elif color == "yellow":
-# 		string = "\x1b[33m" + string + "\x1b[0m"
-# 	elif color == "blue":
-# 		string = "\x1b[34m" + string + "\x1b[0m"
-# 	else:
-# 		pass
-# 	#string = "\x1b[32m[P-M] \x1b[0m" + string
-# 	return string
 
 class Main():
 
@@ -43,14 +29,21 @@ class Main():
 		self.died = []  # мертвые прокси
 		self.blocked = []  # заблокированные прокси
 		self.input = proxy_list
-		self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 		self.protocol = TYPE
 		self.ASN = []
-		with open("settings.ini", mode="r") as file:
-			settings = json.load(file)
-			self.TIMEOUT = settings["TIMEOUT"]
-			self.MAXTRIES = settings["MAXTRIES"]
-			self.THREADS_MULTIPLIER = settings["THREADS_MULTIPLIER"]
+		# with configparser.ConfigParser() as config:
+		# 	config.read("settings.ini")
+		# 	self.TIMEOUT = config["COUNTRIES_ADVANCED"]["TIMEOUT"]
+		# 	self.MAXTRIES = config["COUNTRIES_ADVANCED"]["MAXTRIES"]
+		# 	self.THREADS_MULTIPLIER = config["COUNTRIES_ADVANCED"]["THREADS"]
+		# 	self.NAME = config["main"]["NAME"]
+		config = configparser.ConfigParser()
+		config.read("settings.ini")
+		self.TIMEOUT = config.getint("COUNTRIES_ADVANCED", "TIMEOUT")
+		self.MAXTRIES = config.getint("COUNTRIES_ADVANCED", "MAXTRIES")
+		self.THREADS_MULTIPLIER = config.getint("COUNTRIES_ADVANCED", "THREADS")
+		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
+		del config
 
 		with open("texts/ASN.txt", mode="r") as file:
 			self.ASN = file.read().split()

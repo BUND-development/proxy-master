@@ -7,6 +7,7 @@ def cls():
 # ============================================================
 # ============================================================
 try:
+	import configparser
 	from modules import coloring
 	coloring = coloring.coloring
 	import json
@@ -39,7 +40,6 @@ class Data():
 	'''Класс с настройками'''
 
 	def __init__(self):
-		self.FILENAME = "proxies-parsed.txt"  # файл для дебагга, не нужен
 		self.MAINURLS = (  # сайты, с которых парсится основная часть проксей путем регулярных исключений и архивов
 			"http://www.proxyserverlist24.top/",
 			"http://www.socks24.org",
@@ -47,11 +47,6 @@ class Data():
 			"http://www.socksproxylist24.top/",
 			"http://www.sslproxies24.top/"
 			)
-		self.SOMELINKS = "something.txt" # файл, нужный для дебаггинга
-		self.TIMEOUT = 30
-		self.DOWNLOADTIMEOUT = 20
-		self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
-		#self.SLEEPTIME = random.randint(10, 30)  # приостановка программы перед следующим запросом
 
 
 
@@ -63,10 +58,15 @@ class Parsing(Data):
 		self.download_files = []  # список имен zip файлов, которые были скачаны 
 		#self.proxies_list = []  # список проксей, спарсенных с самих сайтов
 		self.debug_list = []  # список для дебаггинга, в релизных версиях не используется
-		with open("settings.ini", mode="r") as file:
-			settings = json.load(file)
-			self.PARSE_THREADS = settings["PARSE_THREADS"]
-
+		
+		config = configparser.ConfigParser()
+		config.read("settings.ini")
+		self.PARSE_THREADS = config.getint("PARSER", "THREADS")
+		self.TIMEOUT = config.getint("PARSER", "TIMEOUT")
+		self.DOWNLOADTIMEOUT = config.getint("PARSER", "DOWNLOADTIMEOUT")
+		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
+		del config
+		
 # ============================================================
 	# получение всех ссылок со страницы
 	def get_links(self, url):

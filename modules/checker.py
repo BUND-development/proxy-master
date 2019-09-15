@@ -18,7 +18,7 @@ coloring = coloring.coloring
 from modules import logwrite
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # отключение уведомления о небезопасном соединении
-
+import configparser
 
 
 class Check():
@@ -29,36 +29,43 @@ class Check():
 		self.output = []
 		self.banned = []
 		self.died = []
-		self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
-		# загрузка настроек
-		with open("settings.ini", mode="r") as file:
-			settings = json.load(file)
-			print(self.NAME + coloring("Настройки загружены!", "green"))
-			self.BOARD = settings["BOARD"]
-			self.MAXTRIES = settings["MAXTRIES"]
-			self.TIMEOUT = settings["TIMEOUT"]
-			self.THREADS_MULTIPLIER = settings["THREADS_MULTIPLIER"]
-			self.WEBFORPING = settings["WEBFORPING"]
-		
-		self.headers = {
-		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.10240",
-		"Origin": "https://2ch.hk",
-		"Referer": "https://2ch.hk/{0}/".format(str(self.BOARD)),
-		"Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
-		"Connection": "close",
-		}
+
+		config = configparser.ConfigParser()
+		config.read("settings.ini")
+		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
+		self.BOARD = config["CHECKER"]["BOARD"]
+		self.MAXTRIES = config.getint("CHECKER", "MAXTRIES")
+		self.TIMEOUT = config.getint("CHECKER", "TIMEOUT")
+		self.THREADS_MULTIPLIER= config.getint("CHECKER", "THREADS")
+		self.WEBFORPING = config["CHECKER"]["WEBFORPING"]
+		# self.headers = config.items("HEADERS_CUSTOM")
+		# self.headers_2ch = config["HEADERS_2CH"]
+		del config
+		with open("texts/headers.json") as file:
+			hds = json.loads(file.read())
+			self.headers_2ch = hds["HEADERS_2CH"]
+			self.headers = hds["HEADERS_CUSTOM"]
+
+		with open("texts/usrAgents.txt") as file:
+			self.agents = file.read().split("\n")
+			while True:
+				try:
+					self.agents.remove("")
+				except:
+					break
+		self.headers_2ch["Refer"] = "https://2ch.hk/{0}/".format(str(self.BOARD))
+
 	
 	def check2ch(self, threads, lst, output, died, banned):
 		params = {}
 		params["task"] = "report"
 		params["board"] = self.BOARD
-		params["thread"] = threads[random.randint(0, len(threads)-1)] # получение рандомного треда из списка тредов
-		params["comment"] = ''.join(str(random.randint(1000, 10000)))  # комментарий, который видит чмод
 
 		while len(lst):
-			#print(os.getpid())
-			# if len(lst) == 0:
-			# 	print(self.NAME + "Выход из потока...")
+			params["thread"] = threads[random.randint(0, len(threads)-1)] # получение рандомного треда из списка тредов
+			heads = self.headers_2ch
+			heads["User-Agent"] = self.agents[random.randint(0, len(self.agents)-1)]
+			params["comment"] = ''.join(str(random.randint(1000, 10000)))  # комментарий, который видит чмод
 			try:
 				i = lst.pop()
 			except IndexError:
@@ -69,7 +76,7 @@ class Check():
 			try:
 				req = backoff.on_exception(backoff.expo, exceptions.ConnectionError, max_tries=self.MAXTRIES, jitter=None, max_time=25)(_post)  # обработка исключений
 				# отправка запроса на [данные удалены] для проверки на постинг
-				response = json.loads(req("https://5.61.239.35/makaba/makaba.fcgi?json=1", data=params, proxies=proxy, timeout=self.TIMEOUT, headers=self.headers, verify=False).text)
+				response = json.loads(req("https://5.61.239.35/makaba/makaba.fcgi?json=1", data=params, proxies=proxy, timeout=self.TIMEOUT, headers=heads, verify=False).text)
 			except KeyboardInterrupt:
 				print(self.NAME + coloring("Принудительный выход...", "yellow"))
 				break
@@ -115,13 +122,15 @@ class Check():
 
 	def check(self, lst, output, died):
 		while len(lst):
+			heads = self.headers
+			heads["User-Agent"] = self.agents[random.randint(0, len(self.agents)-1)]
 			try:
 				i = lst.pop()
 				proxy = {"https": self.protocol + "://" + i} 
 				# обработка исключений
 				req = backoff.on_exception(backoff.expo, exceptions.ConnectionError, max_tries = self.MAXTRIES, jitter = None, max_time = 25)(_get)
 				# пингование 2ch.hk, можно поменять на любой живой сайт
-				answ = req(''.join(self.WEBFORPING), proxies=proxy, timeout=self.TIMEOUT, verify=False)
+				answ = req(''.join(self.WEBFORPING), proxies=proxy, timeout=self.TIMEOUT, headers=heads, verify=False)
 			except KeyboardInterrupt:
 				print(self.NAME + coloring("Принудительный выход...", "yellow"))
 				break

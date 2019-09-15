@@ -3,22 +3,7 @@
 import sys
 import json
 import os
-
-# def coloring(string, color):
-# 	'''Мой мини-модуль для раскрашивания текста'''
-# 	if color == "red":
-# 		string = "\x1b[31m" + string + "\x1b[0m"
-# 	elif color == "green":
-# 		string = "\x1b[32m" + string + "\x1b[0m"
-# 	elif color == "yellow":
-# 		string = "\x1b[33m" + string + "\x1b[0m"
-# 	elif color == "blue":
-# 		string = "\x1b[34m" + string + "\x1b[0m"
-# 	else:
-# 		pass
-# 	return string
-
-
+import configparser
 
 def out_logo():
 	print(r"  _____    _____     ____   __   __ __     __      __  __               _____   _______   ______   _____   ")
@@ -42,23 +27,27 @@ class Main():
 	def __init__(self, *args, **kwargs):
 		super().__init__()
 		out_logo()
+		#self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 		self.export = []  # прокси на выход
-		with open("settings.ini", mode="r") as file:
-			settings = json.load(file)
-			self.FILENAME_EXPORT = settings["FILENAME_EXPORT"]  # файл с прокси на выходе
-			self.NORMALINPUT = settings["NORMALINPUT"]  # ввод аргументов
-			self.PARSE = settings["PARSE"] # парсить прокси
-			self.SUBNETS = settings["SUBNETS"] # фильтрование по подсетям
-			self.BLACKLIST = settings["BLACKLIST"]  # блеклист айпи
-			self.COUNTRIES = settings["COUNTRIES"]  # фильтровать по странам
-			self.CHECK = settings["CHECK"] # проверять на работоспособность
-			self.CHECKON2CH = settings["CHECKON2CH"]  # проверять на бан на 2ch.hk
-			self.PROTOCOLOUT = settings["PROTOCOLOUT"]  # записывать прокси в формате протокол://прокси:порт
-			self.CHECK_ADVANCED = settings["CHECK_ADVANCED"]  # использовать ли сайт 2ip.io как фильтр стран и провайдеров
-			self.SAME_FILTERING = settings["SAME_FILTERING"] # фильтровать похожее
-			self.CHECK2IP = settings["CHECK2IP"]
-			self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
-		
+		config = configparser.ConfigParser()
+		config.read("settings.ini")
+		self.PARSE = config.getboolean("modules", "PARSE")
+		self.SUBNETS = config.getboolean("modules", "SUBNETS")
+		self.BLACKLIST = config.getboolean("modules", "BLACKLIST")
+		self.CHECK = config.getboolean("modules", "CHECK")
+		self.CHECKON2CH = config.getboolean("modules", "CHECKON2CH")
+		self.CHECK_ADVANCED = config.getboolean("modules", "CHECK_ADVANCED")
+		self.SAME_FILTERING = config.getboolean("modules", "SAME_FILTERING")
+		self.CHECK2IP = config.getboolean("modules", "CHECK2IP")
+		self.COUNTRIES = config.getboolean("modules", "COUNTRIES")
+
+		self.PROTOCOLOUT = config.getboolean("main", "PROTOCOLOUT")
+		self.FILENAME_EXPORT = config["main"]["FILENAME_EXPORT"]
+		self.NORMALINPUT = config.getboolean("main", "NORMALINPUT")
+		self.NAME = "\x1b[32m" +  config["main"]["NAME"] + "\x1b[0m"
+		del config
+	
+
 	def main(self):
 		Main.geting(self)
 		print(self.NAME + coloring("Ввод получен!", "green"))
@@ -68,10 +57,6 @@ class Main():
 				self.export.remove("")
 			except:
 				pass
-		if False:
-			print("БЛЯТЬ ДЕБАГ ВЫКЛЮЧИ!")
-			for i in range(0, len(self.export)):
-				self.export[i] = self.export[i][9:]
 		
 		if self.PARSE:
 			proxy1 = parser.Parsing()  # инициализация класса парсинга
@@ -153,8 +138,6 @@ class Main():
 					file.write(str(i) + "\n")
 
 	def geting(self):
-		with open("settings.ini", mode="r", encoding="utf-8") as file:
-			settings = json.load(file)
 
 		if self.NORMALINPUT:
 			try:

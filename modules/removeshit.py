@@ -4,6 +4,7 @@ import re
 from modules import logwrite
 from modules import coloring
 coloring = coloring.coloring
+import configparser
 from colorama import init as init_ 
 init_()
 
@@ -13,7 +14,14 @@ class Main(object):
 		super(Main, self).__init__()
 		self.proxies = proxylist
 		self.same = ifsame
-		self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
+
+		# with configparser.ConfigParser() as config:
+		# 	config.read("settings.ini")
+		# 	self.NAME = config["main"]["NAME"]
+		config = configparser.ConfigParser()
+		config.read("settings.ini")
+		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
+		del config
 
 	def check_for_valid(self, lst):
 		# r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+"

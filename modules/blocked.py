@@ -6,14 +6,22 @@ colorama.init()
 from modules import coloring
 coloring = coloring.coloring
 from modules import logwrite
-
+import configparser
 
 class Blocked():
 
 	def __init__(self, proxies):
 		self.proxies = proxies
 		self.blacklist = []
-		self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
+		
+		# with configparser.ConfigParser() as config:
+		# 	config.read("settings.ini")
+		# 	self.NAME = config["main"]["NAME"]
+		config = configparser.ConfigParser()
+		config.read("settings.ini")
+		self.NAME = "\x1b[32m" +  config["main"]["NAME"] + "\x1b[0m"
+		del config
+		
 		with open("texts/blacklist.txt", mode="r") as file:
 			self.blacklist = file.read().split("\n")
 			while True:

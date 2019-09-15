@@ -13,19 +13,28 @@ colorama.init()
 import urllib3
 from modules import coloring
 coloring = coloring.coloring
-
+import configparser
 
 class Main(object):
 	"""docstring for Main"""
 	def __init__(self, proxies):
 		super(Main, self).__init__()
 		self.proxies = proxies
-		self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
-		with open("settings.ini") as file:
-			settings = json.load(file)
-			self.token = settings["2IPTOKEN"]
-			self.threads = settings["FILTERING_THREADS"]
-			self.unknown = settings["UNKNOWNOUT"]
+
+		# with configparser.ConfigParser() as config:
+		# 	self.token = config["2IP"]["TOKEN"]
+		# 	self.threads = config["2IP"]["THREADS"]
+		# 	self.unknown = config["2IP"]["UNKNOWNOUT"]
+		# 	self.NAME = config["main"]["NAME"]
+		config = configparser.ConfigParser()
+		config.read("settings.ini")
+		self.token = config["2IP"]["TOKEN"]
+		self.threads = config.getint("2IP", "THREADS")
+		self.unknown = config.getboolean("2IP", "UNKNOWNOUT")
+		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
+		del config
+
+
 		self.headers = {
 		"X-API-Token": self.token,
 		"User-Agent": "curl/7.64.0",
