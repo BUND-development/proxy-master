@@ -1,0 +1,15 @@
+{
+	"HEADERS_2CH": {
+		"Accept": "*/*",
+		"Accept-Encoding": "gzip, deflate, br",
+		"Accept-Language": "en-US,en;q=0.5",
+		"Connection": "close",
+		"Host": "2ch.hk"
+		},
+	"HEADERS_CUSTOM": {
+		"Accept": "*/*",
+		"Accept-Encoding": "gzip, deflate, br",
+		"Accept-Language": "en-US,en;q=0.5",
+		"Connection": "close"
+		}
+}
