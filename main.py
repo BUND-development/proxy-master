@@ -43,7 +43,7 @@ class Main():
 		#self.NAME = "\x1b[32m" + "[P-M]" + "\x1b[0m"
 		self.export = []  # прокси на выход
 		config = configparser.ConfigParser()
-		config.read("settings.ini")
+		config.read("settings.ini", encoding="UTF-8")
 		self.PARSE = config.getboolean("modules", "PARSE")
 		self.SUBNETS = config.getboolean("modules", "SUBNETS")
 		self.BLACKLIST = config.getboolean("modules", "BLACKLIST")

@@ -34,7 +34,7 @@ class Check():
 		self.died = []
 		#self._2chUrl = "https://5.61.239.35/makaba/makaba.fcgi?json=1"
 		config = configparser.ConfigParser()
-		config.read("settings.ini")
+		config.read("settings.ini", encoding="UTF-8")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
 		self.BOARD = config["CHECKER"]["BOARD"]
 		self.MAXTRIES = config.getint("CHECKER", "MAXTRIES")

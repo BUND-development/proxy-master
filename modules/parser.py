@@ -59,7 +59,7 @@ class Parsing(Data):
 		self.debug_list = []  # список для дебаггинга, в релизных версиях не используется
 		
 		config = configparser.ConfigParser()
-		config.read("settings.ini")
+		config.read("settings.ini", encoding="UTF-8")
 		self.PARSE_THREADS = config.getint("PARSER", "THREADS")
 		self.TIMEOUT = config.getint("PARSER", "TIMEOUT")
 		self.DOWNLOADTIMEOUT = config.getint("PARSER", "DOWNLOADTIMEOUT")

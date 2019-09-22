@@ -22,7 +22,7 @@ class Main(object):
 		self.proxies = proxies
 
 		config = configparser.ConfigParser()
-		config.read("settings.ini")
+		config.read("settings.ini", encoding="UTF-8")
 		self.token = config["2IP"]["TOKEN"]
 		self.threads = config.getint("2IP", "THREADS")
 		self.unknown = config.getboolean("2IP", "UNKNOWNOUT")

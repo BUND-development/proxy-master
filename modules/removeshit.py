@@ -16,7 +16,7 @@ class Main(object):
 		self.same = ifsame
 
 		config = configparser.ConfigParser()
-		config.read("settings.ini")
+		config.read("settings.ini", encoding="UTF-8")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
 		del config
 

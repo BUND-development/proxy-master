@@ -33,7 +33,7 @@ class Main():
 		self.ASN = []
 
 		config = configparser.ConfigParser()
-		config.read("settings.ini")
+		config.read("settings.ini", encoding="UTF-8")
 		self.TIMEOUT = config.getint("COUNTRIES_ADVANCED", "TIMEOUT")
 		self.MAXTRIES = config.getint("COUNTRIES_ADVANCED", "MAXTRIES")
 		self.THREADS_MULTIPLIER = config.getint("COUNTRIES_ADVANCED", "THREADS")
