@@ -16,9 +16,7 @@ def get_states(filename):
 	return states
 
 def weed(IPs):
-	# with configparser.ConfigParser() as config:
-	# 	config.read("settings.ini")
-	# 	NAME = config["main"]["NAME"]
+
 	config = configparser.ConfigParser()
 	config.read("settings.ini")
 	NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"

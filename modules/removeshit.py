@@ -15,9 +15,6 @@ class Main(object):
 		self.proxies = proxylist
 		self.same = ifsame
 
-		# with configparser.ConfigParser() as config:
-		# 	config.read("settings.ini")
-		# 	self.NAME = config["main"]["NAME"]
 		config = configparser.ConfigParser()
 		config.read("settings.ini")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"

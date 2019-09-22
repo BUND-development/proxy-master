@@ -22,6 +22,19 @@ def out_logo():
 	print("\n")             
 	print("\n\n")
 
+def decor(func):
+	'''Используется для дебага'''
+	import time
+	def wrapper(*args, **kwargs):
+		start = time.time()
+		result = func(*args, **kwargs)
+		end = time.time()
+		print(end-start)
+		return result
+	return wrapper
+
+
+
 class Main():
 	
 	def __init__(self, *args, **kwargs):
@@ -44,19 +57,21 @@ class Main():
 		self.PROTOCOLOUT = config.getboolean("main", "PROTOCOLOUT")
 		self.FILENAME_EXPORT = config["main"]["FILENAME_EXPORT"]
 		self.NORMALINPUT = config.getboolean("main", "NORMALINPUT")
+		self.FILTERINGBAD = config.getboolean("main", "FILTERINGBAD")
 		self.NAME = "\x1b[32m" +  config["main"]["NAME"] + "\x1b[0m"
 		del config
 	
-
+	#@decor
 	def main(self):
-		Main.geting(self)
+		self.geting()
 		print(self.NAME + coloring("Ввод получен!", "green"))
 		with open("input-proxies.txt", mode="r", encoding="UTF-8") as file:
 			self.export = file.read().split("\n")
-			try:
-				self.export.remove("")
-			except:
-				pass
+			while True:
+				try:
+					self.export.remove("")
+				except:
+					break
 		
 		if self.PARSE:
 			proxy1 = parser.Parsing()  # инициализация класса парсинга
@@ -69,11 +84,11 @@ class Main():
 				"green"
 				))
 			self.export.extend(_)  # добавление проксей
-		
-		print(self.NAME + coloring("Удаление невалидных проксей...", "green"))
-		filtering = removeshit.Main(self.export, self.SAME_FILTERING)
-		self.export = filtering.start()
-		print(self.NAME + coloring("Удаление невалидных проксей закончено.", "green"))
+		if self.FILTERINGBAD:
+			print(self.NAME + coloring("Удаление невалидных проксей...", "green"))
+			filtering = removeshit.Main(self.export, self.SAME_FILTERING)
+			self.export = filtering.start()
+			print(self.NAME + coloring("Удаление невалидных проксей закончено.", "green"))
 		
 		if self.BLACKLIST:
 			print(self.NAME + coloring("Фильтрация проксей началась...", "green"))

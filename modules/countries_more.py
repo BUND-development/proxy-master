@@ -31,12 +31,7 @@ class Main():
 		self.input = proxy_list
 		self.protocol = TYPE
 		self.ASN = []
-		# with configparser.ConfigParser() as config:
-		# 	config.read("settings.ini")
-		# 	self.TIMEOUT = config["COUNTRIES_ADVANCED"]["TIMEOUT"]
-		# 	self.MAXTRIES = config["COUNTRIES_ADVANCED"]["MAXTRIES"]
-		# 	self.THREADS_MULTIPLIER = config["COUNTRIES_ADVANCED"]["THREADS"]
-		# 	self.NAME = config["main"]["NAME"]
+
 		config = configparser.ConfigParser()
 		config.read("settings.ini")
 		self.TIMEOUT = config.getint("COUNTRIES_ADVANCED", "TIMEOUT")
@@ -73,11 +68,11 @@ class Main():
 			self.died = list(died)
 			self.blocked = list(blocked)
 
-			with open("blocked.txt", mode="w", encoding="UTF-8") as file:
+			with open("trashproxies/blocked.txt", mode="a", encoding="UTF-8") as file:
 				for i in self.blocked:
 					file.write(i + "\n")
 
-			with open("died.txt", mode="w", encoding="UTF-8") as file:
+			with open("trashproxies/died.txt", mode="a", encoding="UTF-8") as file:
 				for i in self.died:
 					file.write(i + "\n")
 

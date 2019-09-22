@@ -21,11 +21,6 @@ class Main(object):
 		super(Main, self).__init__()
 		self.proxies = proxies
 
-		# with configparser.ConfigParser() as config:
-		# 	self.token = config["2IP"]["TOKEN"]
-		# 	self.threads = config["2IP"]["THREADS"]
-		# 	self.unknown = config["2IP"]["UNKNOWNOUT"]
-		# 	self.NAME = config["main"]["NAME"]
 		config = configparser.ConfigParser()
 		config.read("settings.ini")
 		self.token = config["2IP"]["TOKEN"]

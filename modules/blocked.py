@@ -13,10 +13,6 @@ class Blocked():
 	def __init__(self, proxies):
 		self.proxies = proxies
 		self.blacklist = []
-		
-		# with configparser.ConfigParser() as config:
-		# 	config.read("settings.ini")
-		# 	self.NAME = config["main"]["NAME"]
 		config = configparser.ConfigParser()
 		config.read("settings.ini")
 		self.NAME = "\x1b[32m" +  config["main"]["NAME"] + "\x1b[0m"
@@ -51,21 +47,6 @@ class Blocked():
 			continue
 		
 		return self.proxies
-
-	# def filtering_ips_1(self, proxylist):
-	# 	output = []
-	# 	for i in proxylist:
-	# 		for j in output:
-	# 			if i[0] == j[0]:
-	# 				print(self.NAME + coloring("Найден повторяющийся айпи в прокси {0}, удаление...".format(i[0] + ":" + i[1]), "yellow"))
-	# 				break
-	# 			elif i == "":
-	# 				break
-	# 			else:
-	# 				pass
-	# 		else:
-	# 			output.append(i)
-	# 	return output
 
 	def remove_blocked(self, proxylist):
 		output = []

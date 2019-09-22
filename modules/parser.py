@@ -5,10 +5,9 @@ def cls():
 	'''Очистка консоли'''
 	os.system('cls' if os.name=='nt' else 'clear')
 # ============================================================
-# ============================================================
 try:
 	import configparser
-	from modules import coloring
+	from modules import coloring, logwrite
 	coloring = coloring.coloring
 	import json
 	from multiprocessing import Process, Lock, Manager
@@ -74,9 +73,7 @@ class Parsing(Data):
 			results = requests.get(url, timeout=25, verify=False)  # поулчение страницы
 		except Exception as e:
 			print(self.NAME + coloring("Ошибка подключения! Проверьте соединение с сетью!", "red"))
-			with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
-				file.write("\n========parser========\n {0} \n".format(e))
-				raise e
+			logwrite.log(e, "parser", name="getlinks")
 		results = bs4.BeautifulSoup(results.text, "lxml")  # создание объекта супа из html страницы
 		results = results.find_all('a')  # получения списка всех ссылок
 		links = []  # список самих ссылок

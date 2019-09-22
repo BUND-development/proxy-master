@@ -16,9 +16,12 @@ import multiprocessing
 from modules import coloring
 coloring = coloring.coloring
 from modules import logwrite
-
+#import asyncio
+#import aiohttp
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # отключение уведомления о небезопасном соединении
 import configparser
+import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor, as_completed, wait
 
 
 class Check():
@@ -29,7 +32,7 @@ class Check():
 		self.output = []
 		self.banned = []
 		self.died = []
-
+		#self._2chUrl = "https://5.61.239.35/makaba/makaba.fcgi?json=1"
 		config = configparser.ConfigParser()
 		config.read("settings.ini")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
@@ -38,8 +41,8 @@ class Check():
 		self.TIMEOUT = config.getint("CHECKER", "TIMEOUT")
 		self.THREADS_MULTIPLIER= config.getint("CHECKER", "THREADS")
 		self.WEBFORPING = config["CHECKER"]["WEBFORPING"]
-		# self.headers = config.items("HEADERS_CUSTOM")
-		# self.headers_2ch = config["HEADERS_2CH"]
+		self.TASKS = config.getint("CHECKER", "WHITE_THREADS")
+		self.WHITE_THREADS = config.getint("CHECKER", "WHITE_THREADS")
 		del config
 		with open("texts/headers.json") as file:
 			hds = json.loads(file.read())
@@ -77,6 +80,7 @@ class Check():
 				req = backoff.on_exception(backoff.expo, exceptions.ConnectionError, max_tries=self.MAXTRIES, jitter=None, max_time=25)(_post)  # обработка исключений
 				# отправка запроса на [данные удалены] для проверки на постинг
 				response = json.loads(req("https://5.61.239.35/makaba/makaba.fcgi?json=1", data=params, proxies=proxy, timeout=self.TIMEOUT, headers=heads, verify=False).text)
+			
 			except KeyboardInterrupt:
 				print(self.NAME + coloring("Принудительный выход...", "yellow"))
 				break
@@ -146,52 +150,161 @@ class Check():
 				output.append(i)
 
 
+#========================================================
 
-	def main_main(self):
+	def sending(self, i):
+
+		params = {}
+		params["task"] = "report"
+		params["board"] = self.BOARD
+		params["thread"] = self.postsForReport[random.randint(0, len(self.postsForReport)-1)] # получение рандомного треда из списка тредов
+		params["comment"] = ''.join(str(random.randint(1000, 10000)))  # комментарий, который видит чмод
+		
+		heads = self.headers_2ch
+		heads["User-Agent"] = self.agents[random.randint(0, len(self.agents)-1)]
+		
+		proxy = {"https": self.protocol + "://" + i}
+		
+		try:
+			req = backoff.on_exception(backoff.expo, exceptions.ConnectionError, max_tries=self.MAXTRIES, jitter=None, max_time=25)(_post)  # обработка исключений
+			# отправка запроса на [данные удалены] для проверки на постинг
+			response = json.loads(req("https://5.61.239.35/makaba/makaba.fcgi?json=1", data=params, proxies=proxy, timeout=self.TIMEOUT, headers=heads, verify=False).text)
+		
+		except KeyboardInterrupt:
+			print(self.NAME + coloring("Принудительный выход...", "yellow"))
+			return None, "Exit", i
+		except:
+			return None, False, i
+		else:
+			return response, True, i
+
+
+	def processPoolController(self, proxies, output, died, banned):
+		'''Контроллер пула для 1 потока'''
+		pool = ThreadPoolExecutor(max_workers=self.TASKS)  # создание класса пула
+		localPool = []
+		
+		for i in range(0, self.TASKS):
+			try:
+				localPool.append(pool.submit(self.sending, proxies.pop()))  # добавление в пул задачи
+			except IndexError:
+				pass
+			except Exception as e:
+				logwrite.log(e, "checker", name="создание задачи")
+
+		if not len(localPool):
+			return 0
+
+		while True:
+			if not len(localPool):
+				break
+			
+			for task in wait(localPool)[0]:  #  обработка всех сделанных задач
+				response,status,proxy = task.result()
+				print(self.NAME + coloring("[{0} проксей в пуле] ".format(str(len(proxies))), "green"), end="")
+				
+				if status == "Exit":
+					print(coloring("Принудительный выход...", "yellow"))
+					return 1
+				
+				elif status == True:
+					if response['message'] == 'Тред не существует.':
+						print(coloring("Найдена прокси в бане {0}".format(proxy), "red"))
+						banned.append(proxy)
+					elif response['message'] == '':
+						print(coloring("Найдена незабаненная прокси {0}".format(proxy), "green"))
+						output.append(proxy)
+					else:
+						print(coloring("Нестандартный ответ ({0})".format(str(response)), "yellow"))
+				
+				else:
+					print("Нерабочая прокси {0}".format(proxy))
+					died.append(proxy)
+
+				if len(proxies):
+					localPool[localPool.index(task)] = pool.submit(self.sending, proxies.pop())  # удаление сделанной задачи и загрузкой новой на ее место
+				else:
+					localPool.remove(task) # в случае если нету больше проксей, удаляется задача и место пустует
+
+		return 0
+
+
+	def modifiedCheck2ch(self):
+		'''Запускает потоки с одним контроллером пула внутри'''
+		self.postsForReport = self.list_of_posts()
 		with Manager() as manager:
-			lst = manager.list(self.proxies)  # создание списка проксей для многопотока
+			proxies = manager.list(self.proxies)  # создание списка проксей для многопотока
 			output = manager.list(self.output)  # создание списка выходящий проксей 
 			died = manager.list(self.died)  # создание списка мертвых проксей
 			banned = manager.list(self.banned)  # создание списка проксей в бане
-			if self.post_check2ch:
-				print(self.NAME + "Инициирована проверка на баны.")
-				threads_list = Check.list_of_posts(self)
-			procs = []  # массив с потоками
-			for i in range(0, self.THREADS_MULTIPLIER):
-				if self.post_check2ch:
-					# создание потока
-					proc = Process(target=Check.check2ch, args=(self, threads_list, lst, output, died, banned))
-				else:
-					# тоже создание потока
-					proc = Process(target=Check.check, args=(self, lst, output, died,))
-				# стартуем!
+			procs = []
+			for i in range(0, self.WHITE_THREADS):
+				proc = Process(target=self.processPoolController, args=(proxies, output, died, banned))
 				proc.start()
 				procs.append(proc)
+			for proc in procs:
+				proc.join()
 
-			for pr in procs:
-				# присоединение потока к осовному
-				pr.join()
 			self.output = list(output)
 			self.banned = list(banned)
 			self.died = list(died)
+
+
+	def main_main(self):
+		if not self.post_check2ch:  # оставил возможность сменить на старый многопоток.
+			with Manager() as manager:
+				lst = manager.list(self.proxies)  # создание списка проксей для многопотока
+				output = manager.list(self.output)  # создание списка выходящий проксей 
+				died = manager.list(self.died)  # создание списка мертвых проксей
+				banned = manager.list(self.banned)  # создание списка проксей в бане
+				if self.post_check2ch:
+					print(self.NAME + "Инициирована проверка на баны.")
+					threads_list = self.list_of_posts()
+				procs = []  # массив с процессами
+				for i in range(0, self.THREADS_MULTIPLIER):
+					if self.post_check2ch:
+						# создание процесса
+						proc = Process(target=self.check2ch, args=(threads_list, lst, output, died, banned))
+					else:
+						# тоже создание процесса
+						proc = Process(target=self.check, args=(lst, output, died,))
+					# стартуем!
+					proc.start()
+					procs.append(proc)
+
+				for pr in procs:
+					# присоединение процесса к осовному
+					pr.join()
+				self.output = list(output)
+				self.banned = list(banned)
+				self.died = list(died)
+		else:
+			print(self.NAME + "Инициирована проверка на баны.")
+			try:
+				self.modifiedCheck2ch()
+			except KeyboardInterrupt:
+				print(self.NAME + coloring("Принудительный выход...", "yellow"))
+			except Exception as e:
+				print("Ошибка {0}! Просьба написать на почту если вы видите это сообщение!".format(e))
+				logwrite.log(e, "checker", name="крашнулась проверка на баны")
 		
 		# у меня один раз крашнулся модуль проверки, причину я так и не нашел. поэтому пусть этой будет пока тут.
 		try:
 			print(self.NAME + coloring("Потоки завершились!", "green"))
 			# записи в txt
 			if self.post_check2ch:
-				with open("banned.txt", mode="w", encoding="UTF-8") as file:
+				with open("trashproxies/banned.txt", mode="a", encoding="UTF-8") as file:
 					for i in self.banned:
 						file.write(i + "\n")
 				print(self.NAME + coloring("Записаны прокси в бане ({0}) в banned.txt".format(str(len(self.banned))), "green"))
-			with open("died.txt", mode="w", encoding="UTF-8") as file:
+			with open("trashproxies/died.txt", mode="a", encoding="UTF-8") as file:
 				for i in self.died:
 					file.write(i + "\n")
 				print(self.NAME + coloring("Записаны нерабочие прокси ({0}) в died.txt".format(str(len(self.died))), "green"))
 		
 		except Exception as e:
 			print("Ошибка {0}! Просьба написать на почту если вы видите это сообщение!".format(e))
-			logwrite.log(e, "checker", name="Ошибка записи в текстовик")
+			logwrite.log(e, "checker", name="Ошибка записи в текстовик", other=str(i))
 
 		return self.output
 
