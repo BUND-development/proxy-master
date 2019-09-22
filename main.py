@@ -53,6 +53,7 @@ class Main():
 		self.SAME_FILTERING = config.getboolean("modules", "SAME_FILTERING")
 		self.CHECK2IP = config.getboolean("modules", "CHECK2IP")
 		self.COUNTRIES = config.getboolean("modules", "COUNTRIES")
+		self.CHECK2IP_CODES = config.getboolean("modules", "CHECK2IP_CODES")
 
 		self.PROTOCOLOUT = config.getboolean("main", "PROTOCOLOUT")
 		self.FILENAME_EXPORT = config["main"]["FILENAME_EXPORT"]
@@ -102,7 +103,7 @@ class Main():
 			self.export = filtering.start()
 			print(self.NAME + coloring("Фильтрация подсетей закончена.", "green"))
 
-		if self.CHECK2IP:
+		if self.CHECK2IP or self.CHECK2IP_CODES:
 			print(self.NAME + coloring("Фильтрация по 2ip началась...", "green"))
 			filtering = ip2.Main(self.export)
 			self.export = filtering.start()

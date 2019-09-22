@@ -26,6 +26,8 @@ class Main(object):
 		self.token = config["2IP"]["TOKEN"]
 		self.threads = config.getint("2IP", "THREADS")
 		self.unknown = config.getboolean("2IP", "UNKNOWNOUT")
+		self.CHECK2IP = config.getboolean("modules", "CHECK2IP")
+		self.CHECK2IP_CODES = config.getboolean("modules", "CHECK2IP_CODES")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
 		del config
 
@@ -34,11 +36,19 @@ class Main(object):
 		"X-API-Token": self.token,
 		"User-Agent": "curl/7.64.0",
 		}
-		with open("texts/countries.txt") as file:
+		with open("texts/countries.txt", encoding="UTF-8") as file:
 			self.countries = file.read().split("\n")
 			while True:
 				try:
 					self.countries.remove("")
+				except:
+					break
+		#self.countriesCodes = []
+		with open("texts/countriesCodes.txt", encoding="UTF-8") as file:
+			self.countriesCodes = file.read().split("\n")
+			while True:
+				try:
+					self.countriesCodes.remove("")
 				except:
 					break
 
@@ -62,23 +72,51 @@ class Main(object):
 				print(self.NAME + coloring("Ошибка соединения с сервером! Проверьте подключения к интернету или снизьте потоки!", "red"))
 				continue
 			else:
-				try:
-					answ = answ["info"]["country"]
-				except Exception as e:
-					print(self.NAME + coloring("Неизвестная страна!", "yellow"))
-					if self.unknown:
-						output.append(i)
-					else:
-						pass
-					break
-					#print(self.NAME + coloring("Неизвестный ответ 2ip!", "yellow"))
-					#logwrite.log(e, "ip2", name="неизвестный ответ", answer=answ)
-				for country in self.countries:
-					if answ == country:
-						print(self.NAME + coloring("Найден айпи из запрещенной страны! {0}".format(i.split(":")[0]), "yellow"))
+				if self.CHECK2IP:
+					try:
+						answ = answ["info"]["country"]
+					except KeyError:
+						if self.unknown:
+							output.append(i)
+						else:
+							pass
 						break
+					except Exception as e:
+						print(self.NAME + coloring("Неизвестная страна!", "yellow"))
+						if self.unknown:
+							output.append(i)
+						else:
+							pass
+						break
+					for country in self.countries:
+						if answ == country:
+							print(self.NAME + coloring("Найден айпи из запрещенной страны! {0}".format(i.split(":")[0]), "yellow"))
+							break
+					else:
+						output.append(i)
 				else:
-					output.append(i)
+					try:
+						answ = answ["info"]["countryCode"]
+					except KeyError:
+						if self.unknown:
+							output.append(i)
+						else:
+							pass
+						break
+					except Exception as e:
+						print(self.NAME + coloring("Неизвестная страна!", "yellow"))
+						if self.unknown:
+							output.append(i)
+						else:
+							pass
+						break
+					
+					for country in self.countriesCodes:
+						if answ == country:
+							print(self.NAME + coloring("Найден айпи из запрещенной страны! {0}".format(i.split(":")[0]), "yellow"))
+							break
+					else:
+						output.append(i)
 
 	def start(self):
 		out = []
