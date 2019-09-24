@@ -159,33 +159,6 @@ Mozilla/4.0 (compatible; MSIE 6.0; AOL 7.0; Windows NT 5.1; Hotbar 4.1.7.0)
 Mozilla/4.0 (compatible; MSIE 6.0; AOL 7.0; Windows NT 5.1; .NET CLR 1.0.3705)
 Mozilla/4.0 (compatible; MSIE 6.0; AOL 7.0; Windows NT 5.1)
 Mozilla/4.0 (compatible; MSIE 6.0; AOL 7.0; Windows NT 5.0)
-Mozilla/4.0 (compatible; MSIE 6.0; AOL 7.0; Windows 98; Win 9x 4.90; .NET CLR 1.1.4322)
-Mozilla/4.0 (compatible; MSIE 6.0; AOL 7.0; Windows 98; Win 9x 4.90; (R1 1.3))
-Mozilla/4.0 (compatible; MSIE 6.0; AOL 7.0; Windows 98; Win 9x 4.90)
-Mozilla/4.0 (compatible; MSIE 6.0; AOL 6.0; Windows NT 5.1)
-Mozilla/4.0 (compatible; MSIE 5.5; AOL 6.0; Windows 98; Win 9x 4.90)
-Mozilla/4.0 (compatible; MSIE 5.5; AOL 6.0; Windows 98)
-Mozilla/4.0 (compatible; MSIE 5.5; AOL 6.0; Windows 95)
-Mozilla/4.0 (compatible; MSIE 5.0; AOL 6.0; Windows 98; DigExt; YComp 5.0.2.5)
-Mozilla/4.0 (compatible; MSIE 6.0; AOL 5.0; Windows NT 5.1)
-Mozilla/4.0 (compatible; MSIE 6.0; AOL 5.0; Windows 98; .NET CLR 1.1.4322)
-Mozilla/4.0 (compatible; MSIE 6.0; AOL 5.0; Windows 98)
-Mozilla/4.0 (compatible; MSIE 5.5; AOL 5.0; Windows NT 5.0)
-Mozilla/4.0 (compatible; MSIE 5.5; AOL 5.0; Windows 98; YComp 5.0.0.0)
-Mozilla/4.0 (compatible; MSIE 5.5; AOL 5.0; Windows 98; Win 9x 4.90)
-Mozilla/4.0 (compatible; MSIE 5.5; AOL 5.0; Windows 98)
-Mozilla/4.0 (compatible; MSIE 5.5; AOL 5.0; Windows 95)
-Mozilla/4.0 (compatible; MSIE 5.0; AOL 5.0; Windows 98; DigExt)
-Mozilla/4.0 (compatible; MSIE 5.0; AOL 5.0; Windows 95; DigExt)
-Mozilla/4.0 (compatible; MSIE 5.0; AOL 5.0; Windows 95)
-Mozilla/4.0 (compatible; MSIE 5.5; AOL 5.0; Windows NT 5.0)
-Mozilla/4.0 (compatible; MSIE 5.5; AOL 4.0; Windows 98)
-Mozilla/4.0 (compatible; MSIE 5.5; AOL 4.0; Windows 95)
-Mozilla/4.0 (compatible; MSIE 5.0; AOL 4.0; Windows 98; DigExt)
-Mozilla/4.0 (compatible; MSIE 5.01; AOL 4.0; Windows 98)
-Mozilla/4.0 (compatible; MSIE 4.01; AOL 4.0; Windows 98)
-Mozilla/4.0 (compatible; MSIE 4.01; AOL 4.0; Windows 95)
-Mozilla/4.0 (compatible; MSIE 4.01; AOL 4.0; Mac_68K)
 Mozilla/5.0 (X11; U; Linux; de-DE) AppleWebKit/527+ (KHTML, like Gecko, Safari/419.3) Arora/0.8.0
 Mozilla/5.0 (Windows; U; ; en-NZ) AppleWebKit/527+ (KHTML, like Gecko, Safari/419.3) Arora/0.8.0
 Mozilla/5.0 (X11; U; Linux; ru-RU) AppleWebKit/527+ (KHTML, like Gecko, Safari/419.3) Arora/0.6 (Change: 802 025a17d)
@@ -230,7 +203,6 @@ Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/534.34 (KHTML, like Gecko) Arora
 Mozilla/5.0 (X11; U; Linux; pl-PL) AppleWebKit/532.4 (KHTML, like Gecko) Arora/0.10.2 Safari/532.4
 Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/534.34 (KHTML, like Gecko) Arora/0.10.2 Safari/534.34
 Mozilla/5.0 (Windows; U; Windows NT 6.0; en-MY) AppleWebKit/527+ (KHTML, like Gecko, Safari/419.3) Arora/0.10.0
-Mozilla/5.0 (Windows; U; ; hu-HU) AppleWebKit/527+ (KHTML, like Gecko, Safari/419.3) Arora/0.10.0
 Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; Avant Browser; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0)
 Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; Avant Browser; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; .NET CLR 3.0.04506; .NET CLR 3.5.21022; InfoPath.2)
 Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; Avant Browser; SLCC1; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30618; InfoPath.1)
@@ -300,12 +272,8 @@ Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.8.1.2) Gecko/2007022
 Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1pre) Gecko/20061203 BonEcho/2.0.0.1pre
 Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1pre) Gecko/20061202 BonEcho/2.0.0.1pre
 Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1pre) Gecko/20061122 BonEcho/2.0.0.1pre
-Mozilla/5.0 (BeOS; U; Haiku BePC; en-US; rv:1.8.1.18) Gecko/20081114 BonEcho/2.0.0.18
-Mozilla/5.0 (BeOS; U; Haiku BePC; en-US; rv:1.8.1.17) Gecko/20080831 BonEcho/2.0.0.17
-Mozilla/5.0 (BeOS; U; BeOS BePC; en-US; rv:1.8.1.17) Gecko/20080831 BonEcho/2.0.0.17
 Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.14) Gecko/20080417 BonEcho/2.0.0.14
 Mozilla/5.0 (BeOS; U; Haiku BePC; en-US; rv:1.8.1.14) Gecko/20080429 BonEcho/2.0.0.14
-Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.13) Gecko/20080401 BonEcho/2.0.0.13
 Mozilla/5.0 (X11; U; Linux i686 (x86_64); en-US; rv:1.8.1.12pre) Gecko/20080103 BonEcho/2.0.0.12pre
 Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.8.1.12) Gecko/20080208 BonEcho/2.0.0.12
 Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.8.1.12) Gecko/20080321 BonEcho/2.0.0.12 (SliTaz GNU/Linux)
