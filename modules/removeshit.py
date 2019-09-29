@@ -21,7 +21,6 @@ class Main(object):
 		del config
 
 	def check_for_valid(self, lst):
-		# r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+"
 		lst2 = []
 		output = []
 		for i in lst:

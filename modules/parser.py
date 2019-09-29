@@ -6,39 +6,43 @@ def cls():
 	os.system('cls' if os.name=='nt' else 'clear')
 # ============================================================
 try:
-	import configparser
+	import json
+	import requests
+	import bs4
+	import urllib3
+	urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # отключение уведомлений об незащищенности соединения
+	
+	# модули
+	from modules import logwrite
 	from modules import coloring, logwrite
 	coloring = coloring.coloring
-	import json
+	
+	# многопоток
 	from multiprocessing import Process, Lock, Manager
-	from modules import logwrite
-	import multiprocessing
-	import requests  # запросы по сети
-	import bs4  # обработка html файлов
+	
+	# цвета в консоли
+	import colorama  # цветной текст
+	colorama.init()  # инициация в консоли цветного текста
+	
+	# остальное
+	import configparser
 	import re  # регулярные исключения
 	import zipfile  # работа с архивами
 	import random  # случайные числа
 	import sys  # работа с системой
-	import colorama  # цветной текст
-	colorama.init()  # инициация в консоли цветного текста
-	import urllib3  # отключение предупреждений об незащищенном соединении
-	from time import sleep  # режим ожидания
+
 except:
 	print(coloring("Ошибка импортирования модулей!", "red"))
 	exit(1)
 else:
 	print(coloring("Модули ипортированы успешно!", "green"))
-# ============================================================
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # отключение уведомлений об незащищенности соединения
 
 
-# ============================================================
 
-
-class Data():
-	'''Класс с настройками'''
-
+class Parsing():
+	''' Класс парсинга прокснй и архивов с проксями'''
 	def __init__(self):
+		#super().__init__()
 		self.MAINURLS = (  # сайты, с которых парсится основная часть проксей путем регулярных исключений и архивов
 			"http://www.proxyserverlist24.top/",
 			"http://www.socks24.org",
@@ -46,17 +50,7 @@ class Data():
 			"http://www.socksproxylist24.top/",
 			"http://www.sslproxies24.top/"
 			)
-
-
-
-class Parsing(Data):
-	''' Класс парсинга прокснй и архивов с проксями'''
-
-	def __init__(self):
-		super().__init__()
 		self.download_files = []  # список имен zip файлов, которые были скачаны 
-		#self.proxies_list = []  # список проксей, спарсенных с самих сайтов
-		self.debug_list = []  # список для дебаггинга, в релизных версиях не используется
 		
 		config = configparser.ConfigParser()
 		config.read("settings.ini", encoding="UTF-8")
@@ -225,20 +219,11 @@ class Parsing(Data):
 		# ===================
 		proxies.extend(Parsing.open_archives(self))  # добавление архивов проксями к результату
 		# ===================
-		print(self.NAME + 
-			coloring(
-				"Итоговое количество проксей {0}, ".format(len(proxies)),
-				""
-				),
+		print(self.NAME + coloring("Итоговое количество проксей {0}, ".format(len(proxies)),""),
 			end=""
 			)
 		proxies = set(proxies)
-		print(
-			coloring(
-				"из которых {0} уникальные.".format(len(proxies)),
-				"green"
-				)
-			)
+		print(coloring("из которых {0} уникальные.".format(len(proxies)),"green"))
 		return proxies
 
 # ============================================================
@@ -255,42 +240,28 @@ class Parsing(Data):
 					xfile = zipfile.ZipFile(i)  # создание переменной архива
 					xfile.extractall()  # распаковка
 					xfile.close()  # закрытие архива
-					# ===================
 					for i2 in os.listdir():  
 						try:
 							if '.txt' in i2:
 								with open(i2, mode="r", encoding="utf-8") as txtfile:  # открытие Txt файла с проксями
 									read = txtfile.read()  # прочтение содержимого файла
 									read = read.split('\n')  # разделение содержимого по новой строке
-									# ===================
 									try:
 										read.remove("")  # удаление строки с пустым символом если есть
 									except:
 										pass
-									# ===================
 									proxy_list.extend(read)  # добавление к уже имеющимся
-									# ===================
 									os.remove(i2)  # удаление txt
 									os.remove(i)  # удаление архива
 							else:
 								continue
 						except:
-							print(self.NAME + 
-								coloring(
-									"Не удалось обработать файл {0}, но распаковка прошла успешно.".format(i2),
-									"yellow"
-									)
-								)
+							print(self.NAME + coloring("Не удалось обработать файл {0}, но распаковка прошла успешно.".format(i2),
+								"yellow"))
 							continue
-						# ===================
 						else:
-							print(self.NAME + 
-								coloring(
-									"Удалось успешно прочесть .txt файл! \n Получено {0} проксей.".format(len(proxy_list)),
-									"green"
-									)
-								)
-							# ===================
+							print(self.NAME + coloring("Удалось успешно прочесть .txt файл! \n Получено {0} проксей.".format(len(proxy_list)),
+									"green"))
 							for i in os.listdir():
 								if ".zip" in i:
 									continue
@@ -300,14 +271,9 @@ class Parsing(Data):
 									except:
 										print(self.NAME + coloring("Ошибка очистки каталога загрузок!", "red"))
 										input(self.NAME + "Удалите все не .zip файлы и нажмите энтер...")
-				# ===================
 				except:
-					print(self.NAME + 
-						coloring(
-							"Не удалось распаковать загруженный архив: {0}".format(i),
-							"red"
-							)
-						)
+					print(self.NAME + coloring("Не удалось распаковать загруженный архив: {0}".format(i),
+								"red"))
 					badtryes += 1
 					for i in os.listdir():
 						if ".zip" in i:
@@ -318,32 +284,14 @@ class Parsing(Data):
 							except:
 								print(self.NAME + coloring("Ошибка очистки каталога загрузок downloads!", "red"))
 								input(self.NAME + "Удалите все не .zip файлы и нажмите энтер...")
-				# ===================
-		# ===================
-		print(self.NAME + 
-			coloring(
-				"Удалось успешно распаковать скачанные архивы!\n" + self.NAME + "Получено {0} проксей, из них ".format(len(proxy_list)),
-				""
-				),
-			end=""
-			)
-		# ===================
+		
+		print(self.NAME + coloring("Удалось успешно распаковать скачанные архивы!\n" + self.NAME + "Получено {0} проксей, из них ".format(len(proxy_list)),
+					""),end="")
 		proxy_list = set(proxy_list)  # очистка от дублей
-		# ===================
-		print(
-			coloring(
-				"{0} уникальные.".format(len(proxy_list)),
-				"green"
-				)
-			)
-		print(badtryes * (self.NAME + 
-			coloring(
-				"Не удалось распаковать или обработать {0} архивов.".format(str(badtryes)),
-				"red"
-				)),
-			end= bool(badtryes) * "\n"
-			)
-		# ===================
+		print(coloring("{0} уникальные.".format(len(proxy_list)),"green"))
+		print(badtryes * (self.NAME + coloring("Не удалось распаковать или обработать {0} архивов.".format(str(badtryes)),
+				"red")),end= bool(badtryes) * "\n")
+
 		for i in os.listdir():
 			try:
 				os.remove(i)

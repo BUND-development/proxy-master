@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 
+# для работы с айпи и CIDR
 import socket,struct
 import ipaddress
-import re
-import configparser
+
+# модули
 from modules import logwrite
 
+# остальное
+import configparser
+import re
 
 class FilteringSubnets():
 	''' Алгоритм и часть кода взята отсюда: http://qaru.site/questions/76775/how-can-i-check-if-an-ip-is-in-a-network-in-python'''
@@ -21,9 +25,14 @@ class FilteringSubnets():
 		
 		with open("texts/subnets.txt", mode="r") as file:
 			self.subnets = file.read().split("\n")
+			_ = []
 			for i in self.subnets:
 				if (i == "") or (i == " ") or ("#" in i):  # удаление комментариев и пустых строк
-					self.subnets.remove(i)
+					continue
+				else:
+					_.append(i)
+			self.subnets.clear()
+			self.subnets.extend(_)
 		print(self.NAME + "Фильтрование подсетей...")
 
 	def start(self):

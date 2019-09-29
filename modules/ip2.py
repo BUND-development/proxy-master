@@ -1,18 +1,27 @@
 # -*- coding: utf-8 -*-
-from modules import logwrite
+
+# работа с сетью
 import backoff
 import requests
 from requests import get as _get
 from requests import exceptions
-from multiprocessing import Process, Lock, Manager
-import multiprocessing
 import urllib3
 import json
-import colorama
-colorama.init()
 import urllib3
+
+# модули
+from modules import logwrite
 from modules import coloring
 coloring = coloring.coloring
+
+# многопоток
+from multiprocessing import Process, Lock, Manager
+
+# цвета в консоли
+import colorama
+colorama.init()
+
+# остальное
 import configparser
 
 class Main(object):

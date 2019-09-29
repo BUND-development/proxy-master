@@ -25,12 +25,7 @@ class Blocked():
 					self.blacklist.remove("")
 				except:
 					break
-			while True:
-				try:
-					self.blacklist.remove(" ")
-				except:
-					break
-
+					
 		for i in range(0, len(self.proxies)):
 			self.proxies[i] = self.proxies[i].split(":")  # разделение по айпи и портам
 

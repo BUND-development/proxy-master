@@ -1,24 +1,32 @@
 # -*- coding: utf-8 -*-
 
+# работа с интернетом
+from requests import get as _get
 import requests
 from bs4 import BeautifulSoup
 import bs4
-from requests import get as _get
 import urllib3
 import json
 import backoff
 from requests import exceptions
-import random
+
+# соснолецвета
 import colorama
 colorama.init()
-import os
-from multiprocessing import Process, Lock, Manager
-#import multiprocessing
-from modules import logwrite
 
+# многопоток
+from multiprocessing import Process, Lock, Manager
+
+# модули
+from modules import logwrite
 from modules import coloring
 coloring = coloring.coloring
+
+# остальное
+import random
 import configparser
+import os
+
 
 
 class Main():
@@ -28,8 +36,8 @@ class Main():
 		self.output = []  # прокси на выход
 		self.died = []  # мертвые прокси
 		self.blocked = []  # заблокированные прокси
-		self.input = proxy_list
-		self.protocol = TYPE
+		self.input = proxy_list  # прокси
+		self.protocol = TYPE  # протокол
 		self.ASN = []
 
 		config = configparser.ConfigParser()

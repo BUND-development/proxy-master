@@ -1,28 +1,31 @@
 # -*- coding: utf-8 -*-
 
+# работа с интернетом
 from requests import post as _post
 from requests import get as _get
+from requests import exceptions
 import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # отключение уведомления о небезопасном соединении
 import json
 import backoff
-from requests import exceptions
-import random
-#mport threading
+
+# инициация цветов
 import colorama
 colorama.init()
-import os
-from multiprocessing import Process, Lock, Manager
-import multiprocessing
+
+# модули
 from modules import coloring
 coloring = coloring.coloring
 from modules import logwrite
-#import asyncio
-#import aiohttp
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # отключение уведомления о небезопасном соединении
-import configparser
-import concurrent.futures
+
+# многопоток и связанное с ним
+from multiprocessing import Process, Lock, Manager
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait
 
+# остальное
+import configparser
+import os
+import random
 
 class Check():
 	def __init__(self, proxies, protocol, post_check):
@@ -32,7 +35,6 @@ class Check():
 		self.output = []
 		self.banned = []
 		self.died = []
-		#self._2chUrl = "https://5.61.239.35/makaba/makaba.fcgi?json=1"
 		config = configparser.ConfigParser()
 		config.read("settings.ini", encoding="UTF-8")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
@@ -44,6 +46,7 @@ class Check():
 		self.TASKS = config.getint("CHECKER", "WHITE_THREADS")
 		self.WHITE_THREADS = config.getint("CHECKER", "WHITE_THREADS")
 		del config
+		
 		with open("texts/headers.json") as file:
 			hds = json.loads(file.read())
 			self.headers_2ch = hds["HEADERS_2CH"]
@@ -104,9 +107,7 @@ class Check():
 	def get_board(self):
 		print(self.NAME + "Получение списка тредов...")
 		try:
-			# создание запроса с обработкой исключений с помощью backoff
 			req = backoff.on_exception(backoff.expo, exceptions.ConnectionError, max_tries = 10, jitter = None, max_time = 30)(_get)
-			# получение каталога тредов
 			answ = json.loads(req(''.join(["https://2ch.hk/" + self.BOARD + "/catalog.json"]), verify=False, timeout=30).text)
 		except:
 			print(self.NAME + 'Ошибка загрузки тредов!')

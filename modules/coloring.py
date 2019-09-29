@@ -1,6 +1,6 @@
 
-import colorama
-colorama.init()
+# import colorama
+# colorama.init()
 
 def coloring(string, color):
 	'''Мой мини-модуль для раскрашивания текста'''
