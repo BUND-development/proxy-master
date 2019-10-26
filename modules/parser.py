@@ -130,7 +130,7 @@ class Parsing():
 									print(self.NAME + coloring("Скачивание файла...", ""))
 									# ===================
 									try:
-										file = requests.get(download, timeout=self.DOWNLOADTIMEOUT)
+										file = requests.get(download, timeout=self.DOWNLOADTIMEOUT, verify=False)
 									except Exception as e:
 										print(self.NAME + coloring("Ошибка загрузки файла!", "red"))
 										logwrite.log(e, "parser", link=str(download))

@@ -164,7 +164,10 @@ class Check():
 		heads = self.headers_2ch
 		heads["User-Agent"] = self.agents[random.randint(0, len(self.agents)-1)]
 		
-		proxy = {"https": self.protocol + "://" + i}
+		proxy = {
+		"https": self.protocol + "://" + i,
+		"http": self.protocol + "://" + i
+		}
 		
 		try:
 			req = backoff.on_exception(backoff.expo, exceptions.ConnectionError, max_tries=self.MAXTRIES, jitter=None, max_time=25)(_post)  # обработка исключений
@@ -250,35 +253,97 @@ class Check():
 			self.banned = list(banned)
 			self.died = list(died)
 
+	def modifiedCheck(self):
+		'''Запускает потоки с одним контроллером пула внутри'''
+		with Manager() as manager:
+			proxies = manager.list(self.proxies)  # создание списка проксей для многопотока
+			output = manager.list(self.output)  # создание списка выходящий проксей 
+			died = manager.list(self.died)  # создание списка мертвых проксей
+			procs = []
+			for i in range(0, self.WHITE_THREADS):
+				proc = Process(target=self.processPoolControllerCheck, args=(proxies, output, died))
+				proc.start()
+				procs.append(proc)
+			for proc in procs:
+				proc.join()
+
+			self.output = list(output)
+			self.died = list(died)
+
+	def sendingCheck(self, i):
+		heads = self.headers
+		heads["User-Agent"] = self.agents[random.randint(0, len(self.agents)-1)]
+		
+		proxy = {
+		"https": self.protocol + "://" + i,
+		"http": self.protocol + "://" + i
+		}
+		
+		try:
+			req = backoff.on_exception(backoff.expo, exceptions.ConnectionError, max_tries=self.MAXTRIES, jitter=None, max_time=25)(_post)  # обработка исключений
+			# отправка запроса на [данные удалены] для проверки на постинг
+			response = json.loads(req(self.WEBFORPING, proxies=proxy, timeout=self.TIMEOUT, headers=heads, verify=False).text)
+		
+		except KeyboardInterrupt:
+			print(self.NAME + coloring("Принудительный выход...", "yellow"))
+			return "Exit", i
+		except:
+			return False, i
+		else:
+			return True, i
+
+	def processPoolControllerCheck(self, proxies, output, died):
+		'''Контроллер пула для 1 потока'''
+		pool = ThreadPoolExecutor(max_workers=self.TASKS)  # создание класса пула
+		localPool = []
+		
+		for i in range(0, self.TASKS):
+			try:
+				localPool.append(pool.submit(self.sendingCheck, proxies.pop()))  # добавление в пул задачи
+			except IndexError:
+				pass
+			except Exception as e:
+				logwrite.log(e, "checker", name="создание задачи")
+
+		if not len(localPool):
+			return 0
+
+		while True:
+			if not len(localPool):
+				break
+			
+			for task in wait(localPool)[0]:  #  обработка всех сделанных задач
+				status,proxy = task.result()
+				print(self.NAME + coloring("[{0} проксей в пуле] ".format(str(len(proxies))), "green"), end="")
+				
+				if status == "Exit":
+					print(coloring("Принудительный выход...", "yellow"))
+					return 1
+				elif status == True:
+					print(coloring("Найдена рабочая прокси {0}".format(proxy), "green"))
+					output.append(proxy)
+				else:
+					print("Нерабочая прокси {0}".format(proxy))
+					died.append(proxy)
+
+				if len(proxies):
+					localPool[localPool.index(task)] = pool.submit(self.sending, proxies.pop())  # удаление сделанной задачи и загрузкой новой на ее место
+				else:
+					localPool.remove(task) # в случае если нету больше проксей, удаляется задача и место пустует
+
+		return 0
+
 
 	def main_main(self):
-		if not self.post_check2ch:  # оставил возможность сменить на старый многопоток.
-			with Manager() as manager:
-				lst = manager.list(self.proxies)  # создание списка проксей для многопотока
-				output = manager.list(self.output)  # создание списка выходящий проксей 
-				died = manager.list(self.died)  # создание списка мертвых проксей
-				banned = manager.list(self.banned)  # создание списка проксей в бане
-				if self.post_check2ch:
-					print(self.NAME + "Инициирована проверка на баны.")
-					threads_list = self.list_of_posts()
-				procs = []  # массив с процессами
-				for i in range(0, self.THREADS_MULTIPLIER):
-					if self.post_check2ch:
-						# создание процесса
-						proc = Process(target=self.check2ch, args=(threads_list, lst, output, died, banned))
-					else:
-						# тоже создание процесса
-						proc = Process(target=self.check, args=(lst, output, died,))
-					# стартуем!
-					proc.start()
-					procs.append(proc)
-
-				for pr in procs:
-					# присоединение процесса к осовному
-					pr.join()
-				self.output = list(output)
-				self.banned = list(banned)
-				self.died = list(died)
+		if not self.post_check2ch:
+			print(self.NAME + "Инициирована проверка.")
+			try:
+				self.modifiedCheck()
+			except KeyboardInterrupt:
+				print(self.NAME + coloring("Принудительный выход...", "yellow"))
+			except Exception as e:
+				print("Ошибка {0}! Просьба написать на почту если вы видите это сообщение!".format(e))
+				logwrite.log(e, "checker", name="крашнулась проверка на баны")
 		else:
 			print(self.NAME + "Инициирована проверка на баны.")
 			try:

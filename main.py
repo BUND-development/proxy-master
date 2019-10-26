@@ -22,6 +22,12 @@ def out_logo():
 	print("\n")             
 	print("\n\n")
 
+
+
+def cls():
+	'''Очистка консоли'''
+	os.system('cls' if os.name=='nt' else 'clear')
+
 def decor(func):
 	'''Используется для дебага'''
 	import time
@@ -32,6 +38,17 @@ def decor(func):
 		print(end-start)
 		return result
 	return wrapper
+
+def libInstaller():
+	try:
+		if os.name=="nt":
+			os.system("pip install --user requests pysocks urllib3 bs4 colorama lxml pygeoip backoff termcolor configparser")
+		else:
+			os.system("pip3 install --user requests pysocks urllib3 bs4 colorama lxml pygeoip backoff termcolor configparser")
+	except:
+		pass
+	finally:
+		cls()
 
 
 
@@ -173,13 +190,14 @@ class Main():
 
 
 if __name__ == "__main__":
+	libInstaller()
 	try:
 		from modules import logwrite
-		#from modules import lib_installer
 		from modules import coloring
 		coloring = coloring.coloring
 	except:
 		pass
+	
 	try:
 		from modules import parser, proxyscrape, subnets, blocked, weed, checker, countries_more, ip2, removeshit
 		import colorama
@@ -189,9 +207,9 @@ if __name__ == "__main__":
 			file.write("=====================\n{0}\n".format(str(e)))
 		print(coloring("Не удалось загрузить все модули/библиотеки!", "red"))
 		exit(1)
-	except:
-		print(coloring("Не удалось загрузить все модули/библиотеки!", "red"))
-		exit(1)
+	# except:
+	# 	print(coloring("Не удалось загрузить все модули/библиотеки!", "red"))
+	# 	exit(1)
 	else:
 		print(coloring("Все модули и библиотеки успешно загружены!", "green"))
 

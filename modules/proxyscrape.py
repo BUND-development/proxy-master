@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import requests 
+import urllib3
 
 
 
@@ -15,7 +16,8 @@ class ProxyScrape():
 
 
 	def start(self):
-		answer = requests.get(self.apiurl, params=self.parametrs, timeout=30)
+		urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+		answer = requests.get(self.apiurl, params=self.parametrs, timeout=30, verify=False)
 		answer = answer.text
 		answer = answer.split("\r\n")
 		try:
