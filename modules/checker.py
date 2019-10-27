@@ -280,9 +280,8 @@ class Check():
 		}
 		
 		try:
-			req = backoff.on_exception(backoff.expo, exceptions.ConnectionError, max_tries=self.MAXTRIES, jitter=None, max_time=25)(_post)  # обработка исключений
-			# отправка запроса на [данные удалены] для проверки на постинг
-			response = json.loads(req(self.WEBFORPING, proxies=proxy, timeout=self.TIMEOUT, headers=heads, verify=False).text)
+			req = backoff.on_exception(backoff.expo, exceptions.ConnectionError, max_tries=self.MAXTRIES, jitter=None, max_time=25)(_get)  # обработка исключений
+			response = req(self.WEBFORPING, proxies=proxy, timeout=self.TIMEOUT, headers=heads, verify=False)
 		
 		except KeyboardInterrupt:
 			print(self.NAME + coloring("Принудительный выход...", "yellow"))
@@ -327,7 +326,7 @@ class Check():
 					died.append(proxy)
 
 				if len(proxies):
-					localPool[localPool.index(task)] = pool.submit(self.sending, proxies.pop())  # удаление сделанной задачи и загрузкой новой на ее место
+					localPool[localPool.index(task)] = pool.submit(self.sendingCheck, proxies.pop())  # удаление сделанной задачи и загрузкой новой на ее место
 				else:
 					localPool.remove(task) # в случае если нету больше проксей, удаляется задача и место пустует
 
