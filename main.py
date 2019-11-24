@@ -1,9 +1,12 @@
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 import sys
 import json
 import os
 import configparser
+from modules import tools
+
 
 def out_logo():
 	print(r"  _____    _____     ____   __   __ __     __      __  __               _____   _______   ______   _____   ")
@@ -11,22 +14,22 @@ def out_logo():
 	print(r" | |__) | | |__) | | |  | |  \ V /   \ \_/ /      | \  / |    /  \    | (___      | |    | |__    | |__) | ")
 	print(r" |  ___/  |  _  /  | |  | |   > <     \   /       | |\/| |   / /\ \    \___ \     | |    |  __|   |  _  /  ")
 	print(r" | |      | | \ \  | |__| |  / . \     | |        | |  | |  / ____ \   ____) |    | |    | |____  | | \ \  ")
-	print(r" |_|      |_|  \_\  \____/  /_/ \_\    |_|        |_|  |_| /_/    \_\ |_____/     |_|    |______| |_|  \_\ ")
-	print("")
-	print(r"  __       _  _   ")
-	print(r" /_ |     | || |  ")
-	print(r"  | |     | || |_ ")
-	print(r"  | |     |__   _|")
-	print(r"  | |  _     | |  ")
-	print(r"  |_| (_)    |_|  ")
-	print("\n")             
-	print("\n\n")
+	print(r" |_|      |_|  \_\  \____/  /_/ \_\    |_|        |_|  |_| /_/    \_\ |_____/     |_|    |______| |_|  \_\ ", end="\n\n")
+	print(r"  __       _____ ")
+	print(r" /_ |     | ____|")
+	print(r"  | |     | |__  ")
+	print(r"  | |     |___ \ ")
+	print(r"  | |  _   ___) |")
+	print(r"  |_| (_) |____/ ", end="\n\n\n\n\n")
+
 
 
 
 def cls():
 	'''Очистка консоли'''
 	os.system('cls' if os.name=='nt' else 'clear')
+
+
 
 def decor(func):
 	'''Используется для дебага'''
@@ -39,12 +42,16 @@ def decor(func):
 		return result
 	return wrapper
 
+
+
 def libInstaller():
 	try:
 		if os.name=="nt":
-			os.system("pip install --user requests pysocks urllib3 bs4 colorama lxml pygeoip backoff termcolor configparser")
+			os.system("pip install --user requests pysocks urllib3 bs4 colorama \
+				lxml pygeoip backoff termcolor configparser brotlipy aiohttp aiohttp_proxy")
 		else:
-			os.system("pip3 install --user requests pysocks urllib3 bs4 colorama lxml pygeoip backoff termcolor configparser")
+			os.system("pip3 install --user requests pysocks urllib3 bs4 colorama \
+				lxml pygeoip backoff termcolor configparser brotlipy aiohttp aiohttp_proxy")
 	except:
 		pass
 	finally:
@@ -63,14 +70,14 @@ class Main():
 		self.PARSE = config.getboolean("modules", "PARSE")
 		self.SUBNETS = config.getboolean("modules", "SUBNETS")
 		self.BLACKLIST = config.getboolean("modules", "BLACKLIST")
-		self.CHECK = config.getboolean("modules", "CHECK")
+		self.USER_CHECK = config.getboolean("modules", "USER_CHECK")
 		self.CHECKON2CH = config.getboolean("modules", "CHECKON2CH")
 		self.CHECK_ADVANCED = config.getboolean("modules", "CHECK_ADVANCED")
 		self.SAME_FILTERING = config.getboolean("modules", "SAME_FILTERING")
 		self.CHECK2IP = config.getboolean("modules", "CHECK2IP")
 		self.COUNTRIES = config.getboolean("modules", "COUNTRIES")
 		self.CHECK2IP_CODES = config.getboolean("modules", "CHECK2IP_CODES")
-
+		self.CHECK_HEADERS = config.getboolean("modules", "CHECK_HEADERS")
 		self.PROTOCOLOUT = config.getboolean("main", "PROTOCOLOUT")
 		self.FILENAME_EXPORT = config["main"]["FILENAME_EXPORT"]
 		self.NORMALINPUT = config.getboolean("main", "NORMALINPUT")
@@ -78,7 +85,7 @@ class Main():
 		self.NAME = "\x1b[32m" +  config["main"]["NAME"] + "\x1b[0m"
 		del config
 	
-	#@decor
+	@tools.errorsCap
 	def main(self):
 		self.geting()
 		print(self.NAME + coloring("Ввод получен!", "green"))
@@ -89,72 +96,46 @@ class Main():
 					self.export.remove("")
 				except:
 					break
-		
+
 		if self.PARSE:
-			proxy1 = parser.Parsing()  # инициализация класса парсинга
-			self.export.extend(proxy1.parsing())  # парсинг
-			print(self.NAME + "Получение проксей из api-модулей...")
-			proxy2 = proxyscrape.ProxyScrape()  # инициация класса модуля апи
-			_ = proxy2.start()  # получение проксей
-			print(self.NAME + coloring(
-				"Получено {0} проксей из модуля {1}".format(str(len(_)), proxy2.__dict__["modulename"]),
-				"green"
-				))
-			self.export.extend(_)  # добавление проксей
+			start = proxy_parser.Parser()
+			self.export = start.main()
+			self.export.extend(proxyscrape.start())
+
 		if self.FILTERINGBAD:
-			print(self.NAME + coloring("Удаление невалидных проксей...", "green"))
 			filtering = removeshit.Main(self.export, self.SAME_FILTERING)
 			self.export = filtering.start()
-			print(self.NAME + coloring("Удаление невалидных проксей закончено.", "green"))
 		
 		if self.BLACKLIST:
-			print(self.NAME + coloring("Фильтрация проксей началась...", "green"))
 			filtering = blocked.Blocked(self.export)
 			self.export = filtering.start()
-			print(self.NAME + coloring("Фильтрация проксей началась.", "green"))
 
 		if self.SUBNETS:
-			print(self.NAME + coloring("Фильтрация подсетей начата...", "green"))
-			filtering = subnets.FilteringSubnets(self.export)
+			filtering = subnets_socket.FilteringSubnets(self.export)
 			self.export = filtering.start()
-			print(self.NAME + coloring("Фильтрация подсетей закончена.", "green"))
 
 		if self.CHECK2IP or self.CHECK2IP_CODES:
-			print(self.NAME + coloring("Фильтрация по 2ip началась...", "green"))
-			filtering = ip2.Main(self.export)
-			self.export = filtering.start()
-			print(self.NAME + coloring("Фильтрация по 2ip закончена.", "green"))
+			filtering = countries_2ip.Countries2Ip(self.export)
+			self.export = filtering.main()
 
 		if self.COUNTRIES:
-			print(self.NAME + coloring("Фильтрация по странам началась...", "green"))
 			self.export = weed.weed(self.export)
-			print(self.NAME + coloring("Фильтрация по странам закончена.", "green"))
 
 		if self.CHECK_ADVANCED:
-			print(self.NAME + coloring("Фильтрация по ASN началась...", "green"))
-			filtering = countries_more.Main(self.export, self.TYPE)
-			try:
-				self.export = filtering.main_main()
-			except KeyboardInterrupt:
-				print(self.NAME + "Принудительный выход, сохранение...")
-			except Exception as e:
-				print(self.NAME + coloring("Ошибка модуля улучшенного фильтра айпи, просьба отправить BUGREPORT", "red"))
-				logwrite.log(e, "main", line="CHECK_ADVANCED")
-			else:
-				print(self.NAME + coloring("Фильтрация по ASN закончена.", "green"))
+			filtering = countries_ipinfo.CheckerIpinfo(self.export, self.TYPE)
+			self.export = filtering.main()
 
-		if self.CHECK:
-			print(self.NAME + coloring("Проверка на рабоспособность началась...", "green"))
-			filtering = checker.Check(self.export, self.TYPE, self.CHECKON2CH)
-			try:
-				self.export = filtering.main_main()
-			except KeyboardInterrupt:
-				print(self.NAME + "Принудительный выход, сохранение...")
-			except Exception as e:
-				print(self.NAME + coloring("Ошибка модуля проверки на постинг, просьба написать об этом на почту", "red"))
-				logwrite.log(e, "main", line="CHECK")
-			else:
-				print(self.NAME + coloring("Проверка на рабоспособность закончена.", "green"))
+		if self.CHECKON2CH:
+			start = bans_checker.BansChecker(self.export, self.TYPE)
+			self.export = start.main()
+
+		if self.CHECK_HEADERS:
+			start = headers_check.HeadersChecker(self.export, self.TYPE)
+			self.export = start.main()
+
+		if self.USER_CHECK:
+			start = userlink_checker.UserChecker(self.export, self.TYPE)
+			self.export = start.main()
 
 		with open(self.FILENAME_EXPORT, mode="w", encoding="UTF-8") as file:
 			print("", end="\n\n")
@@ -170,7 +151,6 @@ class Main():
 					file.write(str(i) + "\n")
 
 	def geting(self):
-
 		if self.NORMALINPUT:
 			try:
 				self.TYPE = sys.argv[1]
@@ -186,33 +166,22 @@ class Main():
 				print(self.NAME + coloring("Введенный протокол прокси не поддерживается, ты точно ввел его правильно?", "red"))
 				exit(1)
 
-			
 
 
 if __name__ == "__main__":
 	libInstaller()
 	try:
-		from modules import logwrite
-		from modules import coloring
-		coloring = coloring.coloring
-	except:
-		pass
-	
-	try:
-		from modules import parser, proxyscrape, subnets, blocked, weed, checker, countries_more, ip2, removeshit
+		from modules import proxyscrape, subnets_socket, blocked, weed, \
+			removeshit, headers_check, bans_checker, userlink_checker, proxy_parser, \
+			countries_2ip, countries_ipinfo, coloring, logwrite
 		import colorama
 		colorama.init()
+		coloring = coloring.coloring
 	except Exception as e:
-		with open("BUGREPORT", mode="a", encoding="UTF-8") as file:
-			file.write("=====================\n{0}\n".format(str(e)))
-		print(coloring("Не удалось загрузить все модули/библиотеки!", "red"))
+		print(f"Не удалось загрузить все модули/библиотеки: {e}")
 		exit(1)
-	# except:
-	# 	print(coloring("Не удалось загрузить все модули/библиотеки!", "red"))
-	# 	exit(1)
 	else:
 		print(coloring("Все модули и библиотеки успешно загружены!", "green"))
-
-
+	##############
 	start = Main()
 	start.main()

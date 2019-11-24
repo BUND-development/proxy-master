@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+
 import sys
 import re
 import pygeoip
 import configparser
-''' Модуль взят и модифицирован у LOH2.0'''
+from modules import coloring
+coloring = coloring.coloring
+
 
 def get_states(filename):
 	states = []
@@ -12,16 +15,16 @@ def get_states(filename):
 			state = state[0:-1]
 			states.append(str(state))
 	states.sort()
-
 	return states
 
 def weed(IPs):
-
+	''' Модуль взят и модифицирован у LOH2.0'''
 	config = configparser.ConfigParser()
 	config.read("settings.ini", encoding="UTF-8")
 	NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
 	del config
-	
+	print(NAME + coloring("Фильтрация по странам началась...", "green"))
+	########################################
 	states = get_states("texts/countries.txt")
 	gi = pygeoip.GeoIP("texts/GeoIP.dat")
 	export = []
@@ -31,17 +34,21 @@ def weed(IPs):
 			pos = IP.find("/")
 			addr = IP[pos+2:len(IP)] if (pos != -1) else IP
 			pos = addr.find(":")
+			###################################
 			if (pos != -1): addr = addr[0:pos]
 			state = str(gi.country_name_by_addr(addr))
+			###################################
 			if (state == "None"):
 				export.append(IP)
 			elif not (state in states):
 				export.append(IP)
 			else:
-				print(NAME + "Найден айпи из блек-лист страны {0}".format(IP))
+				print(NAME + f"Найден айпи из блек-лист страны {IP}")
 		except Exception:
 			pass
+	print(NAME + coloring("Фильтрация по странам закончена.", "green"))
 	return export
+
 
 
 if __name__ == '__main__':

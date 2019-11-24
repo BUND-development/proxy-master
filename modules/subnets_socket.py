@@ -1,52 +1,47 @@
 # -*- coding: utf-8 -*-
 
-# для работы с айпи и CIDR
+
+
 import socket,struct
 import ipaddress
-
-# модули
 from modules import logwrite
-
-# остальное
 import configparser
 import re
+from modules import coloring
+coloring = coloring.coloring
+
 
 class FilteringSubnets():
 	''' Алгоритм и часть кода взята отсюда: http://qaru.site/questions/76775/how-can-i-check-if-an-ip-is-in-a-network-in-python'''
-
 	def __init__(self, proxies):
 		self.proxies = list(proxies)
 		self.subnets = []
-
+		###################################
 		config = configparser.ConfigParser()
 		config.read("settings.ini", encoding="UTF-8")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
 		del config
-		
+		####################################
 		with open("texts/subnets.txt", mode="r") as file:
 			self.subnets = file.read().split("\n")
-			_ = []
-			for i in self.subnets:
-				if (i == "") or (i == " ") or ("#" in i):  # удаление комментариев и пустых строк
-					continue
-				else:
-					_.append(i)
-			self.subnets.clear()
-			self.subnets.extend(_)
+			while True:
+				try:
+					self.subnets.remove("")
+				except:
+					break
 		print(self.NAME + "Фильтрование подсетей...")
 
 	def start(self):
+		print(self.NAME + coloring("Фильтрация подсетей начата...", "green"))
 		for i in range(0, len(self.proxies)):
 			self.proxies[i] = self.proxies[i].split(":")  # разделение на айпи и порт
-
-		
-		self.proxies = FilteringSubnets.addressInNetwork(self, self.proxies)  # удаление айпи, входящих в запрещенные подсети
-		
+		#####################################################################
+		self.proxies = self.addressInNetwork(self.proxies)  # удаление айпи, входящих в запрещенные подсети
+		######################################
 		for i in range(0, len(self.proxies)):
-			self.proxies[i] = self.proxies[i][0] + ":" + self.proxies[i][1]  # воссоединение айпи
-		
+			self.proxies[i] = self.proxies[i][0] + ":" + self.proxies[i][1]  # соединение айпи и порта
+		print(self.NAME + coloring("Фильтрация подсетей закончена.", "green"))
 		return self.proxies
-
 
 	def addressInNetwork(self, proxylist):
 		output = []
@@ -67,11 +62,9 @@ class FilteringSubnets():
 					break
 			else:
 				output.append(proxylist[i])
-
 		return output
-			
+
 
 
 if __name__ == '__main__':
-	start = FilteringSubnets(['103.79.169.153:4145', '54.38.81.12:45907', '127.0.0.1:228'])
-	print(start.start())
+	pass

@@ -1,6 +1,5 @@
+# -*- coding: utf-8 -*-
 
-# import colorama
-# colorama.init()
 
 def coloring(string, color):
 	'''Мой мини-модуль для раскрашивания текста'''
@@ -15,6 +14,7 @@ def coloring(string, color):
 	else:
 		pass
 	return string
+
 
 
 if __name__ == '__main__':

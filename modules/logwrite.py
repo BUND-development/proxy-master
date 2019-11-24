@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 
 
 def log(error, module, **kwargs):
@@ -9,6 +11,7 @@ def log(error, module, **kwargs):
 			params = params + "\n" + str(key) + ":" + str(kwargs[key])
 		text_log = "\n============\nmodule: {0}\nerror:{1}\n--another params--{2}\n settings: {3}\n============\n".format(module, error, params, settings)
 		file.write(text_log)
+
 
 if __name__ == '__main__':
 	pass
