@@ -79,7 +79,7 @@ class CheckerIpinfo(object):
 		###################################
 		config = configparser.ConfigParser()
 		config.read("settings.ini", encoding="UTF-8")
-		self.TIMEOUT = aiohttp.ClientTimeout(total= 30, connect=config.getint("COUNTRIES_ADVANCED", "TIMEOUT"))
+		self.TIMEOUT = aiohttp.ClientTimeout(total=40, connect=config.getint("COUNTRIES_ADVANCED", "TIMEOUT"))
 		self.MAXTRIES = config.getint("COUNTRIES_ADVANCED", "MAXTRIES")
 		self.TASKS = config.getint("COUNTRIES_ADVANCED", "TASKS")
 		self.UNKNOWN = config.getboolean("COUNTRIES_ADVANCED", "UNKNOWN")
@@ -141,7 +141,7 @@ class CheckerIpinfo(object):
 		'''
 		Асинхронная функция проверки на ASN
 		'''
-		send = backoff.on_exception(backoff.expo, Exception, max_time=60, max_tries=self.MAXTRIES, jitter=None)(self.sendWithProxy)
+		send = backoff.on_exception(backoff.expo, Exception, max_time=120, max_tries=self.MAXTRIES, jitter=None)(self.sendWithProxy)
 		#############
 		while True:
 			async with self.lock:

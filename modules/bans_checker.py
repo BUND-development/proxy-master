@@ -92,7 +92,7 @@ class BansChecker(object):
 		config.read("settings.ini", encoding="UTF-8")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
 		self.MAXTRIES = config.getint("BANS_CHECKER", "MAXTRIES")
-		self.TIMEOUT = aiohttp.ClientTimeout(total= 30, connect=config.getint("BANS_CHECKER", "TIMEOUT"))
+		self.TIMEOUT = aiohttp.ClientTimeout(total=50, connect=config.getint("BANS_CHECKER", "TIMEOUT"))
 		self.TASKS = config.getint("BANS_CHECKER", "TASKS")
 		self.BOARD = config.get("BANS_CHECKER", "BOARD")
 		self.PROXY = config.get("main", "PROXY")
@@ -179,7 +179,7 @@ class BansChecker(object):
 		'''
 		Асинхронная задача для проверки на баны
 		'''
-		send = backoff.on_exception(backoff.expo, Exception, max_time=60, max_tries=self.MAXTRIES, jitter=None)(self.sendWithProxy)
+		send = backoff.on_exception(backoff.expo, Exception, max_time=120, max_tries=self.MAXTRIES, jitter=None)(self.sendWithProxy)
 		while True:
 			async with self.lock:
 				if len(self.proxies):

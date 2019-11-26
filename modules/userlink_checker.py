@@ -111,7 +111,7 @@ class UserChecker(object):
 		config = configparser.ConfigParser()
 		config.read("settings.ini", encoding="UTF-8")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
-		self.TIMEOUT = aiohttp.ClientTimeout(total= 30, connect=config.getint("USER_CHECKER", "TIMEOUT"))
+		self.TIMEOUT = aiohttp.ClientTimeout(total=40, connect=config.getint("USER_CHECKER", "TIMEOUT"))
 		self.MAXTRIES = config.getint("USER_CHECKER", "MAXTRIES")
 		self.TASKS = config.getint("USER_CHECKER", "TASKS")
 		self.PARAMS = config.getboolean("USER_CHECKER", "PARAMS")

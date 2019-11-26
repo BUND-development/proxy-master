@@ -94,7 +94,7 @@ class HeadersChecker(object):
 		config = configparser.ConfigParser()
 		config.read("settings.ini", encoding="UTF-8")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
-		self.TIMEOUT = aiohttp.ClientTimeout(total= 30, connect=config.getint("HEADERS_CHECKER", "TIMEOUT"))
+		self.TIMEOUT = aiohttp.ClientTimeout(total=40, connect=config.getint("HEADERS_CHECKER", "TIMEOUT"))
 		self.MAXTRIES = config.getint("HEADERS_CHECKER", "MAXTRIES")
 		self.TASKS = config.getint("HEADERS_CHECKER", "TASKS")
 		self.ANON = config.getboolean("HEADERS_CHECKER", "ANON")
@@ -106,7 +106,7 @@ class HeadersChecker(object):
 		'''
 		from requests import get as get_
 		url = "https://ipinfo.io/ip"
-		send = backoff.on_exception(backoff.expo, Exception, max_time=60, max_tries=10, jitter=None)(get_)
+		send = backoff.on_exception(backoff.expo, Exception, max_time=120, max_tries=10, jitter=None)(get_)
 		################################
 		try:
 			ip = send(url, proxies=None)
@@ -175,7 +175,7 @@ class HeadersChecker(object):
 				return await response.json()
 
 	async def headersChecker(self, **kwargs):
-		send = backoff.on_exception(backoff.expo, Exception, max_time=60, max_tries=self.MAXTRIES, jitter=None)(self.sendWithProxy)
+		send = backoff.on_exception(backoff.expo, Exception, max_time=120, max_tries=self.MAXTRIES, jitter=None)(self.sendWithProxy)
 		###########
 		while True:
 			###################
