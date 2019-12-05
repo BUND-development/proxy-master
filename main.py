@@ -87,6 +87,9 @@ class Main():
 	
 	@tools.errorsCap
 	def main(self):
+		'''
+		main прокси-мастера
+		'''
 		self.geting()
 		print(self.NAME + coloring("Ввод получен!", "green"))
 		with open("input-proxies.txt", mode="r", encoding="UTF-8") as file:
@@ -99,7 +102,7 @@ class Main():
 
 		if self.PARSE:
 			start = proxy_parser.Parser()
-			self.export = start.main()
+			self.export = [*start.main()]
 			self.export.extend(proxyscrape.start())
 
 		if self.FILTERINGBAD:
@@ -179,7 +182,7 @@ if __name__ == "__main__":
 		coloring = coloring.coloring
 	except Exception as e:
 		print(f"Не удалось загрузить все модули/библиотеки: {e}")
-		exit(1)
+		raise e
 	else:
 		print(coloring("Все модули и библиотеки успешно загружены!", "green"))
 	##############

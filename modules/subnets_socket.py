@@ -20,6 +20,7 @@ class FilteringSubnets():
 		config = configparser.ConfigParser()
 		config.read("settings.ini", encoding="UTF-8")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
+		self.MODE = config["SUBNETS"]["MODE"]
 		del config
 		####################################
 		with open("texts/subnets.txt", mode="r") as file:
@@ -36,11 +37,19 @@ class FilteringSubnets():
 		for i in range(0, len(self.proxies)):
 			self.proxies[i] = self.proxies[i].split(":")  # разделение на айпи и порт
 		#####################################################################
-		self.proxies = self.addressInNetwork(self.proxies)  # удаление айпи, входящих в запрещенные подсети
+		if self.MODE == "EXCEPT":
+			self.proxies = self.addressInNetwork(self.proxies)
+		elif self.MODE == "INCLUDE":
+			self.proxies = self.addressOutNetwork(self.proxies)
+		else:
+			print(self.NAME + coloring("Невалидные настройки в SUBNETS!", "red"))
+			input(self.NAME + "Нажмите любую клавишу для пропуска модуля")
+			return self.proxies
 		######################################
 		for i in range(0, len(self.proxies)):
 			self.proxies[i] = self.proxies[i][0] + ":" + self.proxies[i][1]  # соединение айпи и порта
 		print(self.NAME + coloring("Фильтрация подсетей закончена.", "green"))
+		###################
 		return self.proxies
 
 	def addressInNetwork(self, proxylist):
@@ -62,6 +71,28 @@ class FilteringSubnets():
 					break
 			else:
 				output.append(proxylist[i])
+		return output
+
+	def addressOutNetwork(self, proxylist):
+		output = []
+		for i in range(0, len(proxylist)):
+			for subnet in self.subnets:
+				try:
+					if ipaddress.ip_address(proxylist[i][0]) in ipaddress.ip_network(subnet):  # входит ли айпи в подсеть
+						break
+					else:
+						pass
+				except ValueError:
+					continue
+				except Exception as e:
+					print(self.NAME + "Необработанная ошибка!")
+					logwrite.log(e, "sunets", name="ошибка в проверке адреса")
+					break
+			else:
+				print(self.NAME + "Удален айпи ({0}), не входящий в разрешенную подсеть.".format(str(proxylist[i][0])))
+				continue
+			###########################
+			output.append(proxylist[i])
 		return output
 
 

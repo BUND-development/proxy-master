@@ -66,7 +66,8 @@ class Main(object):
 		'''
 		output = []
 		###################################
-		for index in range(0, len(prlist)):
+		prlist_len = len(prlist)
+		for index in range(0, prlist_len):
 			try:
 				proxy = prlist[index].split(":")
 			except Exception as e:
@@ -75,7 +76,7 @@ class Main(object):
 			else:
 				for proxy_out in output:
 					if proxy_out[0] == proxy[0]:
-						print(self.NAME + coloring("Найдена прокси с уже имеющимся айпи: {0}".format(proxy[0] + ":" + proxy[1]), "yellow"))
+						print(self.NAME + coloring(f"[{str(prlist_len - (index + 1))}]Найдена прокси с уже имеющимся айпи: {proxy[0] + ':' + proxy[1]}", "yellow"))
 						break
 				else:
 					output.append(proxy)
@@ -89,12 +90,18 @@ class Main(object):
 		print(self.NAME + coloring("Удаление невалидных проксей...", "green"))
 		try:
 			self.proxies = self.check_for_valid(self.proxies)
-			if self.same:
-				self.proxies = self.checksame(self.proxies)
 		except Exception as e:
 			print(self.NAME + "Критическая ошибка модуля фильтрования невалидных прокси!")
 			logwrite.log(e, "removeshit", name="сломалось в старте")
-		print(self.NAME + coloring("Удаление невалидных проксей закончено.", "green"))
+		#################
+		if self.same:
+			try:
+				self.proxies = self.checksame(self.proxies)
+			except KeyboardInterrupt:
+				print(self.NAME + coloring("Удаление дублей отмненено!", "red"))
+			except Exception as e:
+				raise e
+		print(self.NAME + coloring("Чистка проксей закончена.", "green"))
 		return self.proxies
 
 

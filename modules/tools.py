@@ -7,7 +7,7 @@ def errorsCap(func):
 	if iscoroutine(func):
 		async def wrapper(*args, **kwargs):
 			try:
-				result = func(*args, **kwargs)
+				result = await func(*args, **kwargs)
 			except Exception as e:
 				logwrite.log(e, func.__doc__)
 			else:

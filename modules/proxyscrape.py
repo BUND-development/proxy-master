@@ -17,7 +17,7 @@ def start():
 	try:
 		answer = requests.get(apiurl, params=parametrs, timeout=30, verify=False)
 	except:
-		return None
+		return []
 	answer = answer.text
 	answer = answer.split("\r\n")
 	while True:
