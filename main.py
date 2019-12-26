@@ -48,10 +48,10 @@ def libInstaller():
 	try:
 		if os.name=="nt":
 			os.system("pip install --user requests pysocks urllib3 bs4 colorama \
-				lxml pygeoip backoff termcolor configparser brotlipy aiohttp aiohttp_proxy")
+				lxml pygeoip backoff termcolor configparser brotlipy aiohttp aiohttp_proxy progressbar")
 		else:
 			os.system("pip3 install --user requests pysocks urllib3 bs4 colorama \
-				lxml pygeoip backoff termcolor configparser brotlipy aiohttp aiohttp_proxy")
+				lxml pygeoip backoff termcolor configparser brotlipy aiohttp aiohttp_proxy progressbar")
 	except:
 		pass
 	finally:

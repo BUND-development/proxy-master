@@ -7,7 +7,7 @@ coloring = coloring.coloring
 import configparser
 from colorama import init as init_ 
 init_()
-
+import progressbar
 
 
 class Main(object):
@@ -64,25 +64,26 @@ class Main(object):
 		'''
 		Удаление прокси с одинаковыми айпи
 		'''
+		print(self.NAME + coloring("Удаление прокси с одинаковыми IP...", "green"))
 		output = []
 		###################################
 		prlist_len = len(prlist)
+		dictOfproxies = {}
 		for index in range(0, prlist_len):
 			try:
 				proxy = prlist[index].split(":")
 			except Exception as e:
 				logwrite.log(e, "removeshit", name="ошибка при разделении прокси")
 				continue
-			else:
-				for proxy_out in output:
-					if proxy_out[0] == proxy[0]:
-						print(self.NAME + coloring(f"[{str(prlist_len - (index + 1))}]Найдена прокси с уже имеющимся айпи: {proxy[0] + ':' + proxy[1]}", "yellow"))
-						break
-				else:
-					output.append(proxy)
+			#####################
+			pbar = progressbar.ProgressBar(maxval=prlist_len-1)
+			pbar.start()
+			dictOfproxies.update([proxy, ])
 		###############################
-		for i in range(0, len(output)):
-			output[i] = output[i][0] + ":" + output[i][1]
+		pbar.finish()
+		#######################
+		for i in dictOfproxies:
+			output.append(i + ":" + dictOfproxies[i])
 		#############
 		return output
 
@@ -90,6 +91,8 @@ class Main(object):
 		print(self.NAME + coloring("Удаление невалидных проксей...", "green"))
 		try:
 			self.proxies = self.check_for_valid(self.proxies)
+		except KeyboardInterrupt:
+			print(self.NAME + coloring("Чисткан невалидных проксей отменена!", "red"))
 		except Exception as e:
 			print(self.NAME + "Критическая ошибка модуля фильтрования невалидных прокси!")
 			logwrite.log(e, "removeshit", name="сломалось в старте")
