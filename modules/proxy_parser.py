@@ -302,7 +302,7 @@ class Parser(object):
 			except KeyboardInterrupt:
 				break
 			except Exception as e:
-				print(self.NAME + coloring(f"[{str(len(self.inputLinks))}]Не удалось получить страницу {i}", "white"))
+				print(self.NAME + coloring(f"[{str(len(self.inputLinks))}]Не удалось скачать страницу {i}", "white"))
 			else:
 				local_links = self.getLinks(response)
 				self.parseProxies(response)
@@ -311,7 +311,7 @@ class Parser(object):
 					self.links.update(local_links)
 					self.getDownloadLinks(response)
 				###################################
-				print(self.NAME +coloring(f"[{str(len(self.inputLinks))}]Получена страница {i}", "green"))
+				print(self.NAME +coloring(f"[{str(len(self.inputLinks))}]Спарсена страница {i}", "green"))
 
 	async def DownloadArchive(self):
 		'''
@@ -414,7 +414,6 @@ class Parser(object):
 			string = str(string)
 		proxies_find = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+", string)
 		self.proxies.update(proxies_find)
-		print(self.NAME + coloring(f"Получено {str(len(proxies_find))} проксей.", "green"))
 
 	def saveArchive(self, content):
 		'''

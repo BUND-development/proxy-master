@@ -92,14 +92,13 @@ class Main():
 		'''
 		self.geting()
 		print(self.NAME + coloring("Ввод получен!", "green"))
-		with open("input-proxies.txt", mode="r", encoding="UTF-8") as file:
-			self.export = file.read().split("\n")
-			while True:
-				try:
-					self.export.remove("")
-				except:
-					break
-
+		# with open("input-proxies.txt", mode="r", encoding="UTF-8") as file:
+		# 	self.export = file.read().split("\n")
+		# 	while True:
+		# 		try:
+		# 			self.export.remove("")
+		# 		except:
+		# 			break
 		if self.PARSE:
 			start = proxy_parser.Parser()
 			self.export = [*start.main()]
@@ -154,20 +153,41 @@ class Main():
 					file.write(str(i) + "\n")
 
 	def geting(self):
-		if self.NORMALINPUT:
-			try:
-				self.TYPE = sys.argv[1]
-			except IndexError:
-				print(self.NAME + coloring("Ты забыл написать параметр командной строки!", "red"))
-				exit(1)
-			if (sys.argv[1] != "http") and (sys.argv[1] != "https") and (sys.argv[1] != "socks4") and (sys.argv[1] != "socks5"):
-				print(self.NAME + coloring("Введенный протокол прокси не поддерживается, ты точно ввел его правильно?", "red"))
-				exit(1)
-		else:
-			self.TYPE = input(self.NAME + "Введите протокол прокси> ")
-			if (self.TYPE != "http") and (self.TYPE != "https") and (self.TYPE != "socks4") and (self.TYPE != "socks5"):
-				print(self.NAME + coloring("Введенный протокол прокси не поддерживается, ты точно ввел его правильно?", "red"))
-				exit(1)
+		# временный костыль для автоопределения протокола
+		with open("input-proxies.txt", mode="r", encoding="UTF-8") as file:
+			text = file.read().split("\n")
+			while True:
+				try:
+					text.remove("")
+				except:
+					break
+			if "socks4" in text[0]:
+				self.TYPE = "socks4"
+			elif "socks5" in text[0]:
+				self.TYPE = "socks5"
+			elif "http" in text[0]:
+				self.TYPE = "http"
+			elif "https" in text[0]:
+				self.TYPE = "https"
+			else:
+				if self.NORMALINPUT:
+					try:
+						self.TYPE = sys.argv[1]
+					except IndexError:
+						print(self.NAME + coloring("Ты забыл написать параметр командной строки!", "red"))
+						exit(1)
+					if (sys.argv[1] != "http") and (sys.argv[1] != "https") and (sys.argv[1] != "socks4") and (sys.argv[1] != "socks5"):
+						print(self.NAME + coloring("Введенный протокол прокси не поддерживается, ты точно ввел его правильно?", "red"))
+						exit(1)
+				else:
+					self.TYPE = input(self.NAME + "Введите протокол прокси> ")
+					if (self.TYPE != "http") and (self.TYPE != "https") and (self.TYPE != "socks4") and (self.TYPE != "socks5"):
+						print(self.NAME + coloring("Введенный протокол прокси не поддерживается, ты точно ввел его правильно?", "red"))
+						exit(1)
+				return
+			################
+			self.export = list(map(lambda arg: arg.split("://")[1], text))
+			print(self.NAME + coloring(f"Автоопределен протокол {self.TYPE}", "white"))
 
 
 
@@ -181,7 +201,7 @@ if __name__ == "__main__":
 		colorama.init()
 		coloring = coloring.coloring
 	except Exception as e:
-		print(f"Не удалось загрузить все модули/библиотеки: {e}")
+		print(f"Не удалось загрузить все модули/библиотеки: {e}", end="\n\n\n")
 		raise e
 	else:
 		print(coloring("Все модули и библиотеки успешно загружены!", "green"))

@@ -69,6 +69,8 @@ class Main(object):
 		###################################
 		prlist_len = len(prlist)
 		dictOfproxies = {}
+		pbar = progressbar.ProgressBar(maxval=prlist_len-1)
+		pbar.start()
 		for index in range(0, prlist_len):
 			try:
 				proxy = prlist[index].split(":")
@@ -76,9 +78,8 @@ class Main(object):
 				logwrite.log(e, "removeshit", name="ошибка при разделении прокси")
 				continue
 			#####################
-			pbar = progressbar.ProgressBar(maxval=prlist_len-1)
-			pbar.start()
 			dictOfproxies.update([proxy, ])
+			pbar.update(index)
 		###############################
 		pbar.finish()
 		#######################
