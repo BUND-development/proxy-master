@@ -83,9 +83,12 @@ class Main():
 		self.NORMALINPUT = config.getboolean("main", "NORMALINPUT")
 		self.FILTERINGBAD = config.getboolean("main", "FILTERINGBAD")
 		self.NAME = "\x1b[32m" +  config["main"]["NAME"] + "\x1b[0m"
+		########################
+		self.CHECKON2CH_TYPE = config["BANS_CHECKER"]["TYPE"]
+		self.CHECK_ADVANCED_TYPE = config["COUNTRIES_ADVANCED"]["TYPE"]
 		del config
 	
-	@tools.errorsCap
+	#@tools.errorsCap
 	def main(self):
 		'''
 		main прокси-мастера
@@ -124,12 +127,18 @@ class Main():
 			self.export = weed.weed(self.export)
 
 		if self.CHECK_ADVANCED:
-			filtering = countries_ipinfo.CheckerIpinfo(self.export, self.TYPE)
-			self.export = filtering.main()
+			if self.CHECK_ADVANCED_TYPE == "ASYNC":
+				filtering = countries_ipinfo.CheckerIpinfo(self.export, self.TYPE)
+				self.export = filtering.main()
+			else:
+				self.export = threading_countries_ipinfo.main(self.export, self.TYPE)
 
 		if self.CHECKON2CH:
-			start = bans_checker.BansChecker(self.export, self.TYPE)
-			self.export = start.main()
+			if self.CHECKON2CH_TYPE == "ASYNC":
+				start = bans_checker.BansChecker(self.export, self.TYPE)
+				self.export = start.main()
+			else:
+				self.export = threading_bans_checker.main(self.export, self.TYPE)
 
 		if self.CHECK_HEADERS:
 			start = headers_check.HeadersChecker(self.export, self.TYPE)
@@ -139,6 +148,7 @@ class Main():
 			start = userlink_checker.UserChecker(self.export, self.TYPE)
 			self.export = start.main()
 
+		self.export = list(self.export)
 		with open(self.FILENAME_EXPORT, mode="w", encoding="UTF-8") as file:
 			print("", end="\n\n")
 			try:
@@ -184,6 +194,7 @@ class Main():
 					if (self.TYPE != "http") and (self.TYPE != "https") and (self.TYPE != "socks4") and (self.TYPE != "socks5"):
 						print(self.NAME + coloring("Введенный протокол прокси не поддерживается, ты точно ввел его правильно?", "red"))
 						exit(1)
+				self.export = [*text]
 				return
 			################
 			self.export = list(map(lambda arg: arg.split("://")[1], text))
@@ -196,7 +207,8 @@ if __name__ == "__main__":
 	try:
 		from modules import proxyscrape, subnets_socket, blocked, weed, \
 			removeshit, headers_check, bans_checker, userlink_checker, proxy_parser, \
-			countries_2ip, countries_ipinfo, coloring, logwrite
+			countries_2ip, countries_ipinfo, coloring, logwrite, threading_bans_checker, \
+			threading_countries_ipinfo
 		import colorama
 		colorama.init()
 		coloring = coloring.coloring

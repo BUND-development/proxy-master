@@ -2,7 +2,6 @@
 
 
 import asyncio
-import aiohttp
 import backoff
 import configparser
 import json
@@ -15,6 +14,9 @@ coloring = coloring.coloring
 import ssl
 import aiohttp_proxy
 from aiohttp_proxy import ProxyConnector
+from aiohttp_requests import requests
+import aiohttp
+
 
 
 def ignore_aiohttp_ssl_eror(loop):
@@ -189,4 +191,9 @@ class CheckerIpinfo(object):
 			else:
 				return True
 			return False
+
+
+
+if __name__ == '__main__':
+	pass
 		

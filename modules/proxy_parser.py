@@ -298,6 +298,7 @@ class Parser(object):
 			headers["User-Agent"] = self.agents[random.randint(0, len(self.agents)-1)]
 			###############
 			try:
+				#print(i)
 				response = await send(i, timeout=self.TIMEOUT, headers=headers)
 			except KeyboardInterrupt:
 				break

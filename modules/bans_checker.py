@@ -135,7 +135,7 @@ class BansChecker(object):
 		while True:
 			try:
 				req = backoff.on_exception(backoff.expo, exceptions.ConnectionError, max_tries = 10, jitter = None, max_time = 30)(get)
-				answ = json.loads(req(''.join(["https://2ch.hk/" + self.BOARD + "/catalog.json"]), verify=False, timeout=30, proxies=proxies).text)
+				answ = json.loads(req(''.join(["https://2ch.hk/" + self.BOARD + "/catalog.json"]), verify=False, headers=self.headers_2ch, timeout=30, proxies=proxies).text)
 			except Exception as e:
 				print(self.NAME + 'Ошибка загрузки тредов!')
 				input(self.NAME + "Проверьте подключение к интернету и нажмите любую клавишу...")
@@ -187,12 +187,14 @@ class BansChecker(object):
 				else:
 					break
 			##########################################
+			thread = self.ThreadList[random.randint(0, len(self.ThreadList)-1)]
 			params = {
-				"task": "report",
-				"board": self.BOARD,
-				"thread": self.ThreadList[random.randint(0, len(self.ThreadList)-1)],
-				"comment": ''.join(str(random.randint(100000, 10000000)))
-			}
+						'task': 'report',
+						'board': self.BOARD,
+						'thread': thread,
+						'comment': ''.join(str(random.randint(100000, 10000000))),
+						'posts': thread
+						}
 			headers = copy.deepcopy(self.headers_2ch)
 			headers["User-Agent"] = self.agents[random.randint(0, len(self.agents)-1)]
 			##########################################
