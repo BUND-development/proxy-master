@@ -14,7 +14,6 @@ coloring = coloring.coloring
 import ssl
 import aiohttp_proxy
 from aiohttp_proxy import ProxyConnector
-from aiohttp_requests import requests
 import aiohttp
 
 
