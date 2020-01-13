@@ -51,7 +51,7 @@ mccabe==0.6.1
 multidict==4.5.2
 netaddr==0.7.19
 peewee==3.6.4
-Pillow==5.2.0
+Pillow==6.2.0
 pocketsphinx==0.1.15
 progressbar==2.5
 protobuf==3.10.0
