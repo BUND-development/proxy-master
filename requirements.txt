@@ -95,7 +95,7 @@ typed-ast==1.4.0
 typing==3.6.6
 ufw==0.36
 unattended-upgrades==0.1
-urllib3==1.24.1
+urllib3==1.24.2
 user-agent==0.1.9
 websocket-client==0.55.0
 websockets==6.0
