@@ -77,7 +77,7 @@ PySocks==1.6.8
 pyTelegramBotAPI==3.6.6
 python-apt==1.8.4
 python-dateutil==2.8.0
-pyxdg==0.25
+pyxdg==0.26
 PyYAML==5.1.2
 QDarkStyle==2.6.8
 qrcode==6.1
