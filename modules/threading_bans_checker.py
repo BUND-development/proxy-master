@@ -77,7 +77,7 @@ class Check():
 	def __init__(self):
 		'''init'''
 		config = configparser.ConfigParser()
-		self.url = "http://5.61.239.35/makaba/makaba.fcgi?json=1"
+		self.url = "http://5.61.239.36/makaba/makaba.fcgi?json=1"
 		####################################
 		config = configparser.ConfigParser()
 		config.read("settings.ini", encoding="UTF-8")

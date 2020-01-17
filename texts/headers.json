@@ -1,13 +1,11 @@
 {
 	"HEADERS_2CH": {
-		"Accept": "*/*",
+		"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 		"Accept-Encoding": "gzip, deflate, br",
 		"Accept-Language": "en-US,en;q=0.5",
 		"Connection": "close",
 		"Host": "2ch.hk",
-		"DNT": "1",
-		"UPGRADE-INSECURE-REQUESTS": "1",
-		"X-Requested-With": "XMLHttpRequest"
+		"UPGRADE-INSECURE-REQUESTS": "1"
 		},
 	"HEADERS_CUSTOM": {
 		"Accept": "*/*",
