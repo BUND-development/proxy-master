@@ -86,7 +86,7 @@ class BansChecker(object):
 		super().__init__()
 		self.proxies = proxies
 		self.protocol = protocol
-		self.url = "http://5.61.239.36/makaba/makaba.fcgi?json=1"
+		self.url = "http://2ch.hk/makaba/makaba.fcgi?json=1"
 		####################################
 		config = configparser.ConfigParser()
 		config.read("settings.ini", encoding="UTF-8")
