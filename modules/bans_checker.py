@@ -86,7 +86,7 @@ class BansChecker(object):
 		super().__init__()
 		self.proxies = proxies
 		self.protocol = protocol
-		self.url = "http://2ch.hk/makaba/makaba.fcgi?json=1"
+		self.url = "http://2ch.hk/makaba/makaba.fcgi"
 		####################################
 		config = configparser.ConfigParser()
 		config.read("settings.ini", encoding="UTF-8")
@@ -161,16 +161,20 @@ class BansChecker(object):
 		'''
 		async with aiohttp.ClientSession(connector=ProxyConnector.from_url(f'{self.protocol}://{proxy}'), **kwargs,) as session:
 			async with session.post(self.url, ssl=False, params=params) as response:
-				return await response.json()
+				return await response.text()
 
 	def answerStatus(self, response):
 		'''
 		Анализ ответа на [данные удалены]
 		'''
-		if response["message"] == 'Тред не существует.':
+		if "Тред не существует." in response:
 			return False
-		elif response['message'] == '':
+		elif "OK" in response:
 			return True
+		elif "Плановые техработы" in response:
+			time.sleep(30)
+			print(self.NAME + coloring(f"Техработы.", "red"))
+			return False
 		else:
 			print(self.NAME + coloring(f"Нестандартный ответ: {str(response)}", "red"))
 			return False
@@ -218,7 +222,7 @@ class BansChecker(object):
 						self.banned.append(proxy)
 					print(self.NAME + coloring(f"[{str(len(self.proxies))}]Найден забаненный прокси: {proxy}", "red"))
 
-	@tools.errorsCap
+	#@tools.errorsCap
 	def main(self):
 		'''
 		Собственно, сам запуск

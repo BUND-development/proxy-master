@@ -3,16 +3,17 @@
 import backoff
 import configparser
 import copy
-from urllib3 import disable_warnings, exceptions
+import urllib3
 import threading
 import requests
+from requests import exceptions
 import random
 from modules import logwrite, coloring, tools
 coloring = coloring.coloring
 import json
 import string
 import time
-disable_warnings(exceptions.InsecureRequestWarning)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class Proxies():
@@ -43,10 +44,10 @@ class CheckerThread(threading.Thread):
 	def run(self):
 		'''Запуск'''
 		while True:
-			if self.flag.is_set():
-				break
 			#########
 			with self.lock:
+				if self.flag.is_set():
+					break
 				try:
 					proxy = self.proxies.input.pop()
 				except IndexError:
@@ -77,7 +78,7 @@ class Check():
 	def __init__(self):
 		'''init'''
 		config = configparser.ConfigParser()
-		self.url = "http://2ch.hk/makaba/makaba.fcgi?json=1"
+		self.url = "http://2ch.hk/makaba/makaba.fcgi"
 		####################################
 		config = configparser.ConfigParser()
 		config.read("settings.ini", encoding="UTF-8")
@@ -87,7 +88,7 @@ class Check():
 		self.TASKS = config.getint("BANS_CHECKER", "TASKS")
 		self.BOARD = config.get("BANS_CHECKER", "BOARD")
 		self.PROXY = config.get("main", "PROXY")
-		self.send = backoff.on_exception(backoff.expo, Exception, max_tries = self.MAXTRIES, jitter = None, max_time = 120)(requests.post)
+		self.send = backoff.on_exception(backoff.expo, exceptions.ConnectionError, max_tries = self.MAXTRIES, jitter = None, max_time = self.TIMEOUT)(requests.post)
 		#####################################
 		with open("texts/headers.json") as file:
 			hds = json.loads(file.read())
@@ -124,7 +125,7 @@ class Check():
 		headers = copy.deepcopy(self.headers_2ch)
 		headers["User-Agent"] = self.agents[random.randint(0, len(self.agents)-1)]
 		try:
-			answer = json.loads(self.send(self.url, proxies=proxies, verify=False, params=params, timeout=self.TIMEOUT, headers=headers).text)
+			answer = self.send(self.url, proxies=proxies, verify=False, params=params, timeout=self.TIMEOUT, headers=headers).text
 		except Exception as e:
 			return False, None
 		else:
@@ -134,13 +135,18 @@ class Check():
 		'''
 		Анализ ответа на [данные удалены]
 		'''
-		if response["message"] == 'Тред не существует.':
+		if "Тред не существует." in response:
 			return False
-		elif response['message'] == '':
+		elif "OK" in response:
 			return True
+		elif "Плановые техработы" in response:
+			time.sleep(30)
+			print(self.NAME + coloring(f"Техработы.", "red"))
+			return False
 		else:
 			print(self.NAME + coloring(f"Нестандартный ответ: {str(response)}", "red"))
 			return False
+		
 
 	def get_board(self):
 		'''Получение списка тредов'''
@@ -189,7 +195,7 @@ def main(proxies, protocol):
 	print(checker.NAME + coloring("Проверка на баны началась...", "green"))
 	##############################
 	for i in range(0, _threads+1):
-		_ = CheckerThread(_proxies, protocol, checker, lock)
+		_ = CheckerThread(_proxies, protocol, checker, lock, flag)
 		threads.append(_)
 		_.setDaemon(True)
 		_.start()
@@ -198,7 +204,7 @@ def main(proxies, protocol):
 		for i in threads:
 			i.join()
 	except KeyboardInterrupt:
-		print(checker.NAME + coloring("Проверка отменена!", "yellow"))
+		print(checker.NAME + coloring("Проверка отменена! Завершение всех потоков...", "yellow"))
 		flag.set()
 		while True:
 			threads = threading.enumerate()
