@@ -8,9 +8,8 @@ import json
 from urllib3 import disable_warnings, exceptions
 disable_warnings(exceptions.InsecureRequestWarning)
 import colorama
-colorama.init()
-from modules import coloring, logwrite, tools
-coloring = coloring.coloring
+colorama.init(autoreset=True)
+from modules import tools
 import ssl
 
 def ignore_aiohttp_ssl_eror(loop):
@@ -68,18 +67,19 @@ def ignore_aiohttp_ssl_eror(loop):
 
 class Countries2Ip(object):
 	'''
-	Проверка на страны и коды стран через 2ip.ru
+	Checking coutnries and countries code with 2ip.ru
 	'''
-	def __init__(self, proxies):
+	def __init__(self, proxies, settings):
 		super().__init__()
 		self.proxies = proxies
 		self.TIMEOUT = aiohttp.ClientTimeout(total= 30, connect=10)
 		self.green = []
 		self.died = []
 		self.bad = []
+		self.time = 30
 		#######################
 		config = configparser.ConfigParser()
-		config.read("settings.ini", encoding="UTF-8")
+		config.read(settings, encoding="UTF-8")
 		self.token = config["2IP"]["TOKEN"]
 		self.TASKS = config.getint("2IP", "TASKS")
 		self.unknown = config.getboolean("2IP", "UNKNOWNOUT")
@@ -111,7 +111,7 @@ class Countries2Ip(object):
 	
 	@tools.errorsCap
 	def main(self):
-		print(self.NAME + coloring("Началась проверка на страны через 2ip.ru...", "green"))
+		print(self.NAME + colorama.Fore.GREEN + "Started 2ip check...")
 		##################################
 		self.lock = asyncio.Lock()
 		loop = asyncio.get_event_loop()
@@ -121,10 +121,13 @@ class Countries2Ip(object):
 		for i in range(0, self.TASKS):
 			tasks.append(loop.create_task(self.countriesChecker()))
 		###########################################################################
+		#self.event = asyncio.Event()
+		#tasks.append(loop.create_task(tools.awaiter(self.time, self.event, self.NAME, self.proxies)))
+		########
 		try:
 			loop_response = loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
 		except KeyboardInterrupt:
-			print("\n" + self.NAME + coloring("Проверка отменена! Завершение задач...", "yellow"))
+			print("\n" + self.NAME + colorama.Fore.YELLOW + "Check cancelled! Exiting...")
 			for i in tasks:
 				i.cancel()
 		except Exception as e:
@@ -132,17 +135,16 @@ class Countries2Ip(object):
 		else:
 			tools.loopResponse(loop_response, "2ip")
 		#######################################################################
-		with open("trashproxies/died.txt", mode="a", encoding="UTF-8") as file:
-			for i in self.died:
-				file.write(i + "\n")
+		# with open("trashproxies/died.txt", mode="a", encoding="UTF-8") as file:
+		# 	for i in self.died:
+		# 		file.write(i.normal + "\n")
 		#########################################################################
 		with open("trashproxies/fromBadCountries.txt", mode="a", encoding="UTF-8") as file:
 			for i in self.bad:
-				file.write(i + "\n")
+				file.write(i.normal + "\n")
 		##########################################################
-		print(self.NAME + coloring(f"Записаны нерабочие прокси в trashproxies/died.txt {str(len(self.died))} единиц.", "green"))
-		print(self.NAME + coloring(f"Записаны прокси из заблокированных стран в trashproxies/fromBadCountries.txt {str(len(self.bad))} единиц.", "green"))
-		print(self.NAME + coloring("Проверка стран закончилась.", "green"))
+		print(self.NAME + colorama.Fore.GREEN + f"Proxies from blacklist-countries trashproxies/fromBadCountries.txt, {len(self.bad)}")
+		print(self.NAME + colorama.Fore.GREEN + "Check finished.")
 		return self.green
 
 	async def countriesChecker(self):
@@ -151,6 +153,10 @@ class Countries2Ip(object):
 			###########
 			while True:
 				################
+				# if self.event.is_set():
+				# 	await asyncio.sleep(self.time)
+				# 	continue
+				#####################
 				async with self.lock:
 					try:
 						i = self.proxies.pop()
@@ -165,22 +171,22 @@ class Countries2Ip(object):
 					break
 				except Exception as e:
 					async with self.lock:
-						self.died.append(i)
-					print(self.NAME + coloring(f"[{str(len(self.proxies))}]Нерабочий прокси: {i}", "white"))
+						self.proxies.append(i)
+					raise e
 				else:
 					if self.getCountriesStatus(answer):
 						async with self.lock:
 							self.green.append(i)
-						print(self.NAME + coloring(f"[{str(len(self.proxies))}]Незаблокированный прокси: {i}", "green"))
+						print(self.NAME + colorama.Fore.GREEN + f"[{str(len(self.proxies))}]Good proxy: {i.normal}")
 					else:
 						async with self.lock:
 							self.bad.append(i)
-						print(self.NAME + coloring(f"[{str(len(self.proxies))}]Прокси из заблокированной страны: {i}", "yellow"))
+						print(self.NAME + colorama.Fore.YELLOW + f"[{str(len(self.proxies))}]Proxy from blacklist country: {i.normal}")
 
 	@staticmethod
 	async def send_(proxy, session):
 		#async with aiohttp.ClientSession(headers=self.headers, **kwargs) as session:
-		async with session.get("https://2ip.ru/api/v1.0/geo/" + proxy.split(":")[0]) as respone:
+		async with session.get("https://2ip.ru/api/v1.0/geo/" + proxy.host) as respone:
 			return await respone.json()
 
 	@tools.errorsCap

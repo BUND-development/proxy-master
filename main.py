@@ -1,222 +1,177 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import sys
-import json
-import os
-import configparser
-from modules import tools
 
 
-def out_logo():
-	print(r"  _____    _____     ____   __   __ __     __      __  __               _____   _______   ______   _____   ")
-	print(r" |  __ \  |  __ \   / __ \  \ \ / / \ \   / /     |  \/  |     /\      / ____| |__   __| |  ____| |  __ \  ")
-	print(r" | |__) | | |__) | | |  | |  \ V /   \ \_/ /      | \  / |    /  \    | (___      | |    | |__    | |__) | ")
-	print(r" |  ___/  |  _  /  | |  | |   > <     \   /       | |\/| |   / /\ \    \___ \     | |    |  __|   |  _  /  ")
-	print(r" | |      | | \ \  | |__| |  / . \     | |        | |  | |  / ____ \   ____) |    | |    | |____  | | \ \  ")
-	print(r" |_|      |_|  \_\  \____/  /_/ \_\    |_|        |_|  |_| /_/    \_\ |_____/     |_|    |______| |_|  \_\ ", end="\n\n")
-	print(r"  __       _____ ")
-	print(r" /_ |     | ____|")
-	print(r"  | |     | |__  ")
-	print(r"  | |     |___ \ ")
-	print(r"  | |  _   ___) |")
-	print(r"  |_| (_) |____/ ", end="\n\n\n\n\n")
+def parse_args():
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-d", "--default", dest="useDefault", default=0, type=bool, help="1 for use default config in \
+		texts/settings.default.ini")  # use default config in texts/settings.default.ini
+	parser.add_argument("-s", "--settings", dest="settingsFile", default="settings.ini", help="another configfile path")  # use configfile
+	parser.add_argument("-o", "--output", dest="outputFile", default=None, help="output filename for good proxies")  # default output file with proxies
+	parser.add_argument("-r", "--reinstall-packages", dest="reinstall", default=0, type=bool, help="1 for reinstall/upgrade pip packages")  # reinstall/upgrade pip packages
+	parser.add_argument("-p", "--proxy", dest="proxy", default=None, help="proxy in format protocol://proxy:port")  # proxy using to parse web pages
+	parser.add_argument("-i", "--input", dest="inputFile", default="input-proxies.txt", help="input file for proxies")  # default input file
+	parser.add_argument("-pr", "--protocol", dest="protocol", default=None, help="default protocol of non-formated proxis")  # default protocol
+	parser.add_argument("-if", "--ignore-formated", dest="ignore", default=0, type=bool, help="ignore formated proxies and use only input protocol")  # ignore formated proxies
+	args = parser.parse_args(sys.argv[1:])
+	return args
 
+def main():
+	tools.cls()
+	tools.out_logo()
 
-
-
-def cls():
-	'''Очистка консоли'''
-	os.system('cls' if os.name=='nt' else 'clear')
-
-
-
-def decor(func):
-	'''Используется для дебага'''
-	import time
-	def wrapper(*args, **kwargs):
-		start = time.time()
-		result = func(*args, **kwargs)
-		end = time.time()
-		print(end-start)
-		return result
-	return wrapper
-
-
-
-def libInstaller():
-	try:
-		if os.name=="nt":
-			os.system("pip install --user requests pysocks urllib3 bs4 colorama \
-				lxml pygeoip backoff termcolor configparser brotlipy aiohttp aiohttp_proxy progressbar")
-		else:
-			os.system("pip3 install --user requests pysocks urllib3 bs4 colorama \
-				lxml pygeoip backoff termcolor configparser brotlipy aiohttp aiohttp_proxy progressbar")
-	except:
-		pass
-	finally:
-		cls()
-
-
-
-class Main():
+	args = parse_args()
 	
-	def __init__(self, *args, **kwargs):
-		super().__init__()
-		out_logo()
-		self.export = []  # прокси на выход
-		config = configparser.ConfigParser()
-		config.read("settings.ini", encoding="UTF-8")
-		self.PARSE = config.getboolean("modules", "PARSE")
-		self.SUBNETS = config.getboolean("modules", "SUBNETS")
-		self.BLACKLIST = config.getboolean("modules", "BLACKLIST")
-		self.USER_CHECK = config.getboolean("modules", "USER_CHECK")
-		self.CHECKON2CH = config.getboolean("modules", "CHECKON2CH")
-		self.CHECK_ADVANCED = config.getboolean("modules", "CHECK_ADVANCED")
-		self.SAME_FILTERING = config.getboolean("modules", "SAME_FILTERING")
-		self.CHECK2IP = config.getboolean("modules", "CHECK2IP")
-		self.COUNTRIES = config.getboolean("modules", "COUNTRIES")
-		self.CHECK2IP_CODES = config.getboolean("modules", "CHECK2IP_CODES")
-		self.CHECK_HEADERS = config.getboolean("modules", "CHECK_HEADERS")
-		self.PROTOCOLOUT = config.getboolean("main", "PROTOCOLOUT")
-		self.FILENAME_EXPORT = config["main"]["FILENAME_EXPORT"]
-		self.NORMALINPUT = config.getboolean("main", "NORMALINPUT")
-		self.FILTERINGBAD = config.getboolean("main", "FILTERINGBAD")
-		self.NAME = "\x1b[32m" +  config["main"]["NAME"] + "\x1b[0m"
-		########################
-		self.CHECKON2CH_TYPE = config["BANS_CHECKER"]["TYPE"]
-		self.CHECK_ADVANCED_TYPE = config["COUNTRIES_ADVANCED"]["TYPE"]
-		del config
+	if args.useDefault:
+		settingsFile = "texts/settings.default.ini"
+	else:
+		settingsFile = args.settingsFile
+
+	config = configparser.ConfigParser()
+	config.read(args.settingsFile, encoding="UTF-8")
+	PARSE = config.getboolean("modules", "PARSE")
+	SUBNETS = config.getboolean("modules", "SUBNETS")
+	BLACKLIST = config.getboolean("modules", "BLACKLIST")
+	USER_CHECK = config.getboolean("modules", "USER_CHECK")
+	CHECKON2CH = config.getboolean("modules", "CHECKON2CH")
+	CHECK_ADVANCED = config.getboolean("modules", "CHECK_ADVANCED")
+	SAME_FILTERING = config.getboolean("modules", "SAME_FILTERING")
+	CHECK2IP = config.getboolean("modules", "CHECK2IP")
+	COUNTRIES = config.getboolean("modules", "COUNTRIES")
+	CHECK2IP_CODES = config.getboolean("modules", "CHECK2IP_CODES")
+	#CHECK_HEADERS = config.getboolean("modules", "CHECK_HEADERS")
+	# will be soon...
+	CHECK_HEADERS = False
+	PROTOCOLOUT = config.getboolean("main", "PROTOCOLOUT")
+	FILENAME_EXPORT = config["main"]["FILENAME_EXPORT"]
+	NORMALINPUT = config.getboolean("main", "NORMALINPUT")
+	FILTERINGBAD = config.getboolean("main", "FILTERINGBAD")
+	NAME = "\x1b[32m" +  config["main"]["NAME"] + "\x1b[0m"
+	########################
+	#CHECKON2CH_TYPE = config["BANS_CHECKER"]["TYPE"]
+	#CHECK_ADVANCED_TYPE = config["COUNTRIES_ADVANCED"]["TYPE"]
+	del config
 	
-	#@tools.errorsCap
-	def main(self):
-		'''
-		main прокси-мастера
-		'''
-		self.geting()
-		print(self.NAME + coloring("Ввод получен!", "green"))
-		# with open("input-proxies.txt", mode="r", encoding="UTF-8") as file:
-		# 	self.export = file.read().split("\n")
-		# 	while True:
-		# 		try:
-		# 			self.export.remove("")
-		# 		except:
-		# 			break
-		if self.PARSE:
-			start = proxy_parser.Parser()
-			self.export = [*start.main()]
-			self.export.extend(proxyscrape.start())
+	
 
-		if self.FILTERINGBAD:
-			filtering = removeshit.Main(self.export, self.SAME_FILTERING)
-			self.export = filtering.start()
-		
-		if self.BLACKLIST:
-			filtering = blocked.Blocked(self.export)
-			self.export = filtering.start()
+	if args.reinstall:
+		tools.libInstaller()
 
-		if self.SUBNETS:
-			filtering = subnets_socket.FilteringSubnets(self.export)
-			self.export = filtering.start()
+	inputFile = args.inputFile
 
-		if self.CHECK2IP or self.CHECK2IP_CODES:
-			filtering = countries_2ip.Countries2Ip(self.export)
-			self.export = filtering.main()
+	if not args.protocol:
+		protocol = input(colorama.Fore.GREEN + NAME + "Protocol> ")
+	else:
+		protocol = args.protocol
 
-		if self.COUNTRIES:
-			self.export = weed.weed(self.export)
+	if args.outputFile:
+		FILENAME_EXPORT = args.outputFile
+	
 
-		if self.CHECK_ADVANCED:
-			if self.CHECK_ADVANCED_TYPE == "ASYNC":
-				filtering = countries_ipinfo.CheckerIpinfo(self.export, self.TYPE)
-				self.export = filtering.main()
-			else:
-				self.export = threading_countries_ipinfo.main(self.export, self.TYPE)
-
-		if self.CHECKON2CH:
-			if self.CHECKON2CH_TYPE == "ASYNC":
-				start = bans_checker.BansChecker(self.export, self.TYPE)
-				self.export = start.main()
-			else:
-				self.export = threading_bans_checker.main(self.export, self.TYPE)
-
-		if self.CHECK_HEADERS:
-			start = headers_check.HeadersChecker(self.export, self.TYPE)
-			self.export = start.main()
-
-		if self.USER_CHECK:
-			start = userlink_checker.UserChecker(self.export, self.TYPE)
-			self.export = start.main()
-
-		self.export = list(self.export)
-		with open(self.FILENAME_EXPORT, mode="w", encoding="UTF-8") as file:
-			print("", end="\n\n")
+	proxies = []
+	with open(inputFile, mode="r", encoding="UTF-8") as file:
+		proxies_raw = file.read().split("\n")
+		for i in proxies_raw:
+			if i == "": continue
 			try:
-				self.export.remove("")
-			except:
-				pass
-			print(self.NAME + "Всего {0} прокси-серверов.".format(str(len(self.export))))
-			for i in self.export:
-				if self.PROTOCOLOUT:
-					file.write(self.TYPE + "://" + str(i) + "\n")
-				else:
-					file.write(str(i) + "\n")
+				proxies.append(tools.Proxy(i, protocol=protocol, ignoreFormated=args.ignore))
+			except tools.ProxyInitError:
+				print(f"{NAME}{colorama.Fore.YELLOW} Failed to init proxy {i}")
+			except Exception as e:
+				raise e
 
-	def geting(self):
-		# временный костыль для автоопределения протокола
-		with open("input-proxies.txt", mode="r", encoding="UTF-8") as file:
-			text = file.read().split("\n")
-			while True:
+		print(colorama.Fore.YELLOW)
+		print(NAME + colorama.Fore.GREEN + f"Default protocol {protocol}")
+		
+		if PARSE:
+			start = proxy_parser.Parser(args.settingsFile)
+			exported = [*start.main()]
+			exported.extend(proxyscrape.start())
+			for i in exported:
 				try:
-					text.remove("")
-				except:
-					break
-			if "socks4" in text[0]:
-				self.TYPE = "socks4"
-			elif "socks5" in text[0]:
-				self.TYPE = "socks5"
-			elif "http" in text[0]:
-				self.TYPE = "http"
-			elif "https" in text[0]:
-				self.TYPE = "https"
-			else:
-				if self.NORMALINPUT:
-					try:
-						self.TYPE = sys.argv[1]
-					except IndexError:
-						print(self.NAME + coloring("Ты забыл написать параметр командной строки!", "red"))
-						exit(1)
-					if (sys.argv[1] != "http") and (sys.argv[1] != "https") and (sys.argv[1] != "socks4") and (sys.argv[1] != "socks5"):
-						print(self.NAME + coloring("Введенный протокол прокси не поддерживается, ты точно ввел его правильно?", "red"))
-						exit(1)
+					proxies.append(tools.Proxy(i, protocol, ignoreFormated=args.ignore))
+				except tools.ProxyInitError:
+					print(f"{NAME}{colorama.Fore.YELLOW} Failed to init proxy {i}")
+				except Exception as e:
+					raise e
+
+		if FILTERINGBAD:
+			filtering = removeshit.Main(proxies, SAME_FILTERING, args.settingsFile)
+			proxies = filtering.start()
+		
+		if BLACKLIST:
+			filtering = blocked.Blocked(proxies, args.settingsFile)
+			proxies = filtering.start()
+
+		if SUBNETS:
+			filtering = subnets_socket.FilteringSubnets(proxies, args.settingsFile)
+			proxies = filtering.start()
+
+		if CHECK2IP or CHECK2IP_CODES:
+			filtering = countries_2ip.Countries2Ip(proxies, args.settingsFile)
+			proxies = filtering.main()
+
+		if COUNTRIES:
+			proxies = weed.weed(proxies, args.settingsFile)
+
+		if CHECK_ADVANCED:
+			# if CHECK_ADVANCED_TYPE == "ASYNC":
+			# 	filtering = countries_ipinfo.CheckerIpinfo(export, TYPE)
+			# 	export = filtering.main()
+			# else:
+			# 	export = threading_countries_ipinfo.main(export, TYPE)
+			filtering = countries_ipinfo.CheckerIpinfo(proxies, args.settingsFile)
+			proxies = filtering.main()
+
+		if CHECKON2CH:
+			# if CHECKON2CH_TYPE == "ASYNC":
+			# 	start = bans_checker.BansChecker(export, TYPE)
+			# 	export = start.main()
+			# else:
+			# 	export = threading_bans_checker.main(export, TYPE)
+			start = bans_checker.BansChecker(proxies, args.settingsFile)
+			proxies = start.main()
+
+		if CHECK_HEADERS:
+			start = headers_check.HeadersChecker(proxies, args.settingsFile)
+			export = start.main()
+
+		if USER_CHECK:
+			start = userlink_checker.UserChecker(proxies, args.settingsFile)
+			proxies = start.main()
+
+		print("", end="\n\n")
+		print(NAME + f"Total {str(len(proxies))} proxies.")
+
+		with open(FILENAME_EXPORT, mode="w", encoding="UTF-8") as file:
+			for i in proxies:
+				if PROTOCOLOUT:
+					file.write(i.formated + "\n")
 				else:
-					self.TYPE = input(self.NAME + "Введите протокол прокси> ")
-					if (self.TYPE != "http") and (self.TYPE != "https") and (self.TYPE != "socks4") and (self.TYPE != "socks5"):
-						print(self.NAME + coloring("Введенный протокол прокси не поддерживается, ты точно ввел его правильно?", "red"))
-						exit(1)
-				self.export = [*text]
-				return
-			################
-			self.export = list(map(lambda arg: arg.split("://")[1], text))
-			print(self.NAME + coloring(f"Автоопределен протокол {self.TYPE}", "white"))
+					file.write(i.normal + "\n")
+	
+
+	
 
 
-
-if __name__ == "__main__":
-	libInstaller()
+if __name__ == '__main__':
 	try:
-		from modules import proxyscrape, subnets_socket, blocked, weed, \
-			removeshit, headers_check, bans_checker, userlink_checker, proxy_parser, \
-			countries_2ip, countries_ipinfo, coloring, logwrite, threading_bans_checker, \
-			threading_countries_ipinfo
+		# from modules import proxyscrape, subnets_socket, blocked, weed, \
+		# 	removeshit, headers_check, bans_checker, userlink_checker, proxy_parser, \
+		# 	countries_2ip, countries_ipinfo, threading_bans_checker, \
+		# 	threading_countries_ipinfo
+		from modules import tools, proxyscrape, proxy_parser, removeshit, blocked, subnets_socket, \
+		countries_2ip, weed, countries_ipinfo, bans_checker, headers_check, userlink_checker
+		import argparse
+		import sys
+		import configparser
 		import colorama
-		colorama.init()
-		coloring = coloring.coloring
+		colorama.init(autoreset=True)
 	except Exception as e:
-		print(f"Не удалось загрузить все модули/библиотеки: {e}", end="\n\n\n")
+		print(f"Error while importing modules: {e}", end="\n\n\n")
 		raise e
 	else:
-		print(coloring("Все модули и библиотеки успешно загружены!", "green"))
-	##############
-	start = Main()
-	start.main()
+		print(colorama.Fore.GREEN + "All modules was loaded successfully!")
+	
+	main()

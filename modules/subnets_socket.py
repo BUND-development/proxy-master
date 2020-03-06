@@ -4,21 +4,21 @@
 
 import socket,struct
 import ipaddress
-from modules import logwrite
+from modules import tools
 import configparser
 import re
-from modules import coloring
-coloring = coloring.coloring
+import colorama
+colorama.init(autoreset=True)
 
 
 class FilteringSubnets():
-	''' Алгоритм и часть кода взята отсюда: http://qaru.site/questions/76775/how-can-i-check-if-an-ip-is-in-a-network-in-python'''
-	def __init__(self, proxies):
+	''' Some of code was taiken from: http://qaru.site/questions/76775/how-can-i-check-if-an-ip-is-in-a-network-in-python'''
+	def __init__(self, proxies, settings):
 		self.proxies = list(proxies)
 		self.subnets = []
 		###################################
 		config = configparser.ConfigParser()
-		config.read("settings.ini", encoding="UTF-8")
+		config.read(settings, encoding="UTF-8")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
 		self.MODE = config["SUBNETS"]["MODE"]
 		del config
@@ -30,25 +30,22 @@ class FilteringSubnets():
 					self.subnets.remove("")
 				except:
 					break
-		print(self.NAME + "Фильтрование подсетей...")
 
 	def start(self):
-		print(self.NAME + coloring("Фильтрация подсетей начата...", "green"))
-		for i in range(0, len(self.proxies)):
-			self.proxies[i] = self.proxies[i].split(":")  # разделение на айпи и порт
+		print(self.NAME + colorama.Fore.GREEN + "Started filtering subnets...")
 		#####################################################################
-		if self.MODE == "EXCEPT":
-			self.proxies = self.addressInNetwork(self.proxies)
-		elif self.MODE == "INCLUDE":
-			self.proxies = self.addressOutNetwork(self.proxies)
-		else:
-			print(self.NAME + coloring("Невалидные настройки в SUBNETS!", "red"))
-			input(self.NAME + "Нажмите любую клавишу для пропуска модуля")
-			return self.proxies
+		try:
+			if self.MODE == "EXCEPT":
+				self.proxies = self.addressInNetwork(self.proxies)
+			elif self.MODE == "INCLUDE":
+				self.proxies = self.addressOutNetwork(self.proxies)
+			else:
+				print(self.NAME + colorama.Fore.RED + f"INVALID SETTING: {self.MODE}")
+				input(self.NAME + "Press any key to skip filtering...")
+		except KeyboardInterrupt:
+			print(self.NAME + colorama.Fore.GREEN + "Cancelled!")
 		######################################
-		for i in range(0, len(self.proxies)):
-			self.proxies[i] = self.proxies[i][0] + ":" + self.proxies[i][1]  # соединение айпи и порта
-		print(self.NAME + coloring("Фильтрация подсетей закончена.", "green"))
+		print(self.NAME + colorama.Fore.GREEN + "Finished filtering subnets...")
 		###################
 		return self.proxies
 
@@ -57,17 +54,18 @@ class FilteringSubnets():
 		for i in range(0, len(proxylist)):
 			for subnet in self.subnets:
 				try:
-					if ipaddress.ip_address(proxylist[i][0]) in ipaddress.ip_network(subnet):  # входит ли айпи в запрещенную подсеть
-						print(self.NAME + "Удален айпи ({0}), входящий в запрещенную подсеть.".format(str(proxylist[i][0])))
+					if ipaddress.ip_address(proxylist[i].host) in ipaddress.ip_network(subnet):
+						print(self.NAME + colorama.Fore.YELLOW + f"Removed host in blacklist subnet: {proxylist[i].host}")
 						break
 					else:
 						pass
 				except ValueError:
-					print(self.NAME + "Удален невалидный айпи ({0})".format(i[0]))
+					print(self.NAME + f"Removed invalid host: {proxylist[i].host}")
 					break
 				except Exception as e:
-					print(self.NAME + "Необработанная ошибка!")
-					logwrite.log(e, "sunets", name="ошибка в проверке адреса")
+					print(self.NAME + f"Error: {e}")
+					tools.log(e, "sunets", name="ошибка в проверке адреса")
+					raise e
 					break
 			else:
 				output.append(proxylist[i])
@@ -78,18 +76,19 @@ class FilteringSubnets():
 		for i in range(0, len(proxylist)):
 			for subnet in self.subnets:
 				try:
-					if ipaddress.ip_address(proxylist[i][0]) in ipaddress.ip_network(subnet):  # входит ли айпи в подсеть
+					if ipaddress.ip_address(proxylist[i].host) in ipaddress.ip_network(subnet):
 						break
 					else:
 						pass
 				except ValueError:
 					continue
 				except Exception as e:
-					print(self.NAME + "Необработанная ошибка!")
-					logwrite.log(e, "sunets", name="ошибка в проверке адреса")
+					print(self.NAME + f"Error: {e}")
+					tools.log(e, "sunets", name="ошибка в проверке адреса")
+					raise e
 					break
 			else:
-				print(self.NAME + "Удален айпи ({0}), не входящий в разрешенную подсеть.".format(str(proxylist[i][0])))
+				print(self.NAME + colorama.Fore.GREEN + f"Removed host in non-whitelist subnet: {proxylist[i].host}")
 				continue
 			###########################
 			output.append(proxylist[i])

@@ -14,9 +14,8 @@ import random
 from urllib3 import disable_warnings, exceptions
 disable_warnings(exceptions.InsecureRequestWarning)
 import colorama
-colorama.init()
-from modules import coloring, logwrite, tools
-coloring = coloring.coloring
+colorama.init(autoreset=True)
+from modules import tools
 import ssl
 
 
@@ -80,16 +79,15 @@ class BoardGetError(exceptions.ConnectionError):
 
 class BansChecker(object):
 	'''
-	Проверка на баны
+	Bans checker class
 	'''
-	def __init__(self, proxies, protocol):
+	def __init__(self, proxies, settings):
 		super().__init__()
 		self.proxies = proxies
-		self.protocol = protocol
 		self.url = "http://2ch.hk/makaba/makaba.fcgi"
 		####################################
 		config = configparser.ConfigParser()
-		config.read("settings.ini", encoding="UTF-8")
+		config.read(settings, encoding="UTF-8")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
 		self.MAXTRIES = config.getint("BANS_CHECKER", "MAXTRIES")
 		self.TIMEOUT = aiohttp.ClientTimeout(total=50, connect=config.getint("BANS_CHECKER", "TIMEOUT"))
@@ -97,13 +95,9 @@ class BansChecker(object):
 		self.BOARD = config.get("BANS_CHECKER", "BOARD")
 		self.PROXY = config.get("main", "PROXY")
 		#####################################
-		# список тредов
 		self.ThreadList = []
-		# живые без бана
 		self.green = []
-		# мертвые
 		self.died = []
-		# забаненные
 		self.banned = []
 		##################
 		with open("texts/headers.json") as file:
@@ -121,7 +115,7 @@ class BansChecker(object):
 		self.headers_2ch["Refer"] = f"http://2ch.hk/{self.BOARD}/"
 
 	def get_board(self):
-		'''Получение списка тредов'''
+		'''Parsing thread numbers from 2ch.hk'''
 		print(self.NAME + "Получение списка тредов...")
 		if self.PROXY != "0":
 			proxies = {
@@ -137,18 +131,18 @@ class BansChecker(object):
 				req = backoff.on_exception(backoff.expo, exceptions.ConnectionError, max_tries = 10, jitter = None, max_time = 30)(get)
 				answ = json.loads(req(''.join(["https://2ch.hk/" + self.BOARD + "/catalog.json"]), verify=False, headers=self.headers_2ch, timeout=30, proxies=proxies).text)
 			except Exception as e:
-				print(self.NAME + 'Ошибка загрузки тредов!')
-				input(self.NAME + "Проверьте подключение к интернету и нажмите любую клавишу...")
+				print(self.NAME + 'Failed to load 2ch threads!')
+				input(self.NAME + "Check your connection and press any key...")
 				continue
 			else:
-				print(self.NAME + 'Треды загружены успешно!')
+				print(self.NAME + 'Threads loaded successfully')
 				break
 		return self.list_of_posts(answ)
 
 	@staticmethod
 	def list_of_posts(answer):
 		'''
-		Обработка каталога и получения номеров треда
+		Parsing numbers of threads from response
 		'''
 		lst = []
 		for i in range(0, len(answer)):
@@ -157,15 +151,15 @@ class BansChecker(object):
 
 	async def sendWithProxy(self, proxy, params, **kwargs):
 		'''
-		Отправка запроса с прокси
+		Sending request
 		'''
-		async with aiohttp.ClientSession(connector=ProxyConnector.from_url(f'{self.protocol}://{proxy}'), **kwargs,) as session:
+		async with aiohttp.ClientSession(connector=ProxyConnector.from_url(proxy.formated), **kwargs,) as session:
 			async with session.post(self.url, ssl=False, params=params) as response:
 				return await response.text()
 
 	def answerStatus(self, response):
 		'''
-		Анализ ответа на [данные удалены]
+		Returns result of ban check
 		'''
 		if "Тред не существует." in response:
 			return False
@@ -173,15 +167,15 @@ class BansChecker(object):
 			return True
 		elif "Плановые техработы" in response:
 			time.sleep(30)
-			print(self.NAME + coloring(f"Техработы.", "red"))
+			print(self.NAME + colorama.Fore.RED + "Makaba is down.")
 			return False
 		else:
-			print(self.NAME + coloring(f"Нестандартный ответ: {str(response)}", "red"))
+			print(self.NAME + colorama.Fore.YELLOW + f"Unknown unswer: {str(response)}")
 			return False
 
 	async def banChecker(self):
 		'''
-		Асинхронная задача для проверки на баны
+		Async task for checking bans
 		'''
 		send = backoff.on_exception(backoff.expo, Exception, max_time=120, max_tries=self.MAXTRIES, jitter=None)(self.sendWithProxy)
 		while True:
@@ -209,25 +203,25 @@ class BansChecker(object):
 			except Exception as e:
 				async with self.lock:
 					self.died.append(proxy)
-				print(self.NAME + coloring(f"[{str(len(self.proxies))}]Нерабочий прокси: {proxy}", "white"))
+				print(self.NAME + f"[{str(len(self.proxies))}]Died proxy: {proxy.normal}")
 			else:
 				###############################
 				if self.answerStatus(response):
 					async with self.lock:
 						self.green.append(proxy)
-					print(self.NAME + coloring(f"[{str(len(self.proxies))}]Найден рабочий прокси: {proxy}", "green"))
+					print(self.NAME + colorama.Fore.GREEN + f"[{str(len(self.proxies))}]Good proxy: {proxy.normal}")
 				###############################
 				else:
 					async with self.lock:
 						self.banned.append(proxy)
-					print(self.NAME + coloring(f"[{str(len(self.proxies))}]Найден забаненный прокси: {proxy}", "red"))
+					print(self.NAME + colorama.Fore.RED + f"[{str(len(self.proxies))}]Banned proxy: {proxy.normal}")
 
 	#@tools.errorsCap
 	def main(self):
 		'''
-		Собственно, сам запуск
+		main of bans checker
 		'''
-		print(self.NAME + coloring("Проверка на баны началась...", "green"))
+		print(self.NAME + colorama.Fore.GREEN + "Started bans checker...")
 		##################################
 		self.lock = asyncio.Lock()
 		self.ThreadList = self.get_board()
@@ -241,7 +235,7 @@ class BansChecker(object):
 		try:
 			loop_response = loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
 		except KeyboardInterrupt:
-			print("\n" + self.NAME + coloring("Проверка отменена! Завершение задач...", "yellow"))
+			print("\n" + self.NAME + colorama.Fore.YELLOW + "Check cancelled! Exiting...")
 			for i in tasks:
 				i.cancel()
 		except Exception as e:
@@ -251,15 +245,15 @@ class BansChecker(object):
 		#######################################################################
 		with open("trashproxies/died.txt", mode="a", encoding="UTF-8") as file:
 			for i in self.died:
-				file.write(i + "\n")
+				file.write(i.normal + "\n")
 		#########################################################################
 		with open("trashproxies/banned.txt", mode="a", encoding="UTF-8") as file:
 			for i in self.banned:
-				file.write(i + "\n")
+				file.write(i.normal + "\n")
 		##########################################################
-		print(self.NAME + coloring(f"Записаны нерабочие прокси в trashproxies/died.txt {str(len(self.died))} единиц.", "green"))
-		print(self.NAME + coloring(f"Записаны забаненные прокси в trashproxies/banned.txt {str(len(self.banned))} единиц.", "green"))
-		print(self.NAME + coloring("Проверка на баны закончилась...", "green"))
+		print(self.NAME + colorama.Fore.GREEN + f"Bad proxies in trashproxies/died.txt, {len(self.died)}")
+		print(self.NAME + colorama.Fore.GREEN + f"Banned proxies in trashproxies/banned.txt, {len(self.banned)}")
+		print(self.NAME + colorama.Fore.GREEN + "Bans check finished!")
 		return self.green
 
 

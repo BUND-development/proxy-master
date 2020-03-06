@@ -4,8 +4,8 @@ import sys
 import re
 import pygeoip
 import configparser
-from modules import coloring
-coloring = coloring.coloring
+import colorama
+colorama.init(autoreset=True)
 
 
 def get_states(filename):
@@ -17,44 +17,33 @@ def get_states(filename):
 	states.sort()
 	return states
 
-def weed(IPs):
-	''' Модуль взят и модифицирован у LOH2.0'''
+def weed(proxies, settings):
+	''' Code by LOH2.0'''
 	config = configparser.ConfigParser()
-	config.read("settings.ini", encoding="UTF-8")
+	config.read(settings, encoding="UTF-8")
 	NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
 	del config
-	print(NAME + coloring("Фильтрация по странам началась...", "green"))
+	print(NAME + colorama.Fore.GREEN + "Stared filtering countries...")
 	########################################
 	states = get_states("texts/countries.txt")
 	gi = pygeoip.GeoIP("texts/GeoIP.dat")
 	export = []
-	for IP in IPs:
+	for i in proxies:
 		try:
-			IP = re.sub("\n", '', IP)
-			pos = IP.find("/")
-			addr = IP[pos+2:len(IP)] if (pos != -1) else IP
-			pos = addr.find(":")
-			###################################
-			if (pos != -1): addr = addr[0:pos]
-			state = str(gi.country_name_by_addr(addr))
-			###################################
-			if (state == "None"):
-				export.append(IP)
-			elif not (state in states):
-				export.append(IP)
-			else:
-				print(NAME + f"Найден айпи из блек-лист страны {IP}")
-		except Exception:
-			pass
-	print(NAME + coloring("Фильтрация по странам закончена.", "green"))
+			state = str(gi.country_name_by_addr(i.host))
+		except Exception as e:
+			raise e
+		###################################
+		if (state == "None"):
+			export.append(i)
+		elif not (state in states):
+			export.append(i)
+		else:
+			print(NAME + f"Found ip from blacklist country: {i.normal}")
+	print(NAME + colorama.Fore.GREEN + f"Finished filtering countries, {str(len(export))} good proxies.")
 	return export
 
 
 
 if __name__ == '__main__':
-	IPs = get_IPs(sys.argv[1])  # айпи
-	states = get_states(sys.argv[2])  # страны
-	output = sys.argv[3]  # выходной файл
-	flag = int(sys.argv[4])  # 0 или 1, если 1 чистятся не найденные айпишники
-	weed(IPs)
-	print("All right!")
+	pass

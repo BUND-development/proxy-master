@@ -8,9 +8,8 @@ import json
 from urllib3 import disable_warnings, exceptions
 disable_warnings(exceptions.InsecureRequestWarning)
 import colorama
-colorama.init()
-from modules import coloring, logwrite, tools
-coloring = coloring.coloring
+colorama.init(autoreset=True)
+from modules import tools
 import ssl
 import aiohttp_proxy
 from aiohttp_proxy import ProxyConnector
@@ -72,14 +71,14 @@ def ignore_aiohttp_ssl_eror(loop):
 
 
 class CheckerIpinfo(object):
-	"""Проверка на ASN-номера провайдеров"""
-	def __init__(self, proxies, protocol):
+	"""Checking ASN of provider"""
+	def __init__(self, proxies, settings):
 		super().__init__()
 		self.proxies = proxies
-		self.protocol = protocol
+		self.time = 60
 		###################################
 		config = configparser.ConfigParser()
-		config.read("settings.ini", encoding="UTF-8")
+		config.read(settings, encoding="UTF-8")
 		self.TIMEOUT = aiohttp.ClientTimeout(total=40, connect=config.getint("COUNTRIES_ADVANCED", "TIMEOUT"))
 		self.MAXTRIES = config.getint("COUNTRIES_ADVANCED", "MAXTRIES")
 		self.TASKS = config.getint("COUNTRIES_ADVANCED", "TASKS")
@@ -93,18 +92,17 @@ class CheckerIpinfo(object):
 					self.ASN.remove("")
 				except:
 					break
-			print(self.NAME + "ASN-номера загружены успешно!")
 		##################
 		self.green = []
 		self.died = []
 		self.bad = []
 
-	@tools.errorsCap
+	#@tools.errorsCap
 	def main(self):
 		'''
 		ipinfo checker main
 		'''
-		print(self.NAME + coloring("Началась проверка на ASN-номера через ipinfo...", "green"))
+		print(self.NAME + colorama.Fore.GREEN + "Starting ASN check...")
 		##################################
 		self.lock = asyncio.Lock()
 		loop = asyncio.get_event_loop()
@@ -113,11 +111,14 @@ class CheckerIpinfo(object):
 		##############################
 		for i in range(0, self.TASKS):
 			tasks.append(loop.create_task(self.asnChecker()))
+		########################################################
+		#self.event = asyncio.Event()
+		#tasks.append(loop.create_task(tools.awaiter(self.time, self.event, self.NAME, self.proxies)))
 		###########################################################################
 		try:
 			loop_response = loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
 		except KeyboardInterrupt:
-			print("\n" + self.NAME + coloring("Проверка отменена! Завершение задач...", "yellow"))
+			print("\n" + self.NAME + colorama.Fore.YELLOW + "Check cancelled! Exiting...")
 			for i in tasks:
 				i.cancel()
 		except Exception as e:
@@ -127,24 +128,28 @@ class CheckerIpinfo(object):
 		#######################################################################
 		with open("trashproxies/died.txt", mode="a", encoding="UTF-8") as file:
 			for i in self.died:
-				file.write(i + "\n")
+				file.write(i.normal + "\n")
 		#########################################################################
 		with open("trashproxies/badASN.txt", mode="a", encoding="UTF-8") as file:
 			for i in self.bad:
-				file.write(i + "\n")
+				file.write(i.normal + "\n")
 		##########################################################
-		print(self.NAME + coloring(f"Записаны нерабочие прокси в trashproxies/died.txt {str(len(self.died))} единиц.", "green"))
-		print(self.NAME + coloring(f"Записаны прокси с ASN из блек-листа в trashproxies/badASN.txt {str(len(self.bad))} единиц.", "green"))
-		print(self.NAME + coloring("Проверка ASN закончилась.", "green"))
+		print(self.NAME + colorama.Fore.GREEN + f"Bad proxies in trashproxies/died.txt, {len(self.died)}")
+		print(self.NAME + colorama.Fore.GREEN + f"Proxy with blacklist ASN in trashproxies/badASN.txt, {len(self.died)}")
+		print(self.NAME + colorama.Fore.GREEN + "ASN check finished!")
 		return self.green
 
 	async def asnChecker(self):
 		'''
-		Асинхронная функция проверки на ASN
+		Async task for checking ASN
 		'''
 		send = backoff.on_exception(backoff.expo, Exception, max_time=120, max_tries=self.MAXTRIES, jitter=None)(self.sendWithProxy)
 		#############
 		while True:
+			# if self.event.is_set():
+			# 		await asyncio.sleep(self.time)
+			# 		continue
+			####################
 			async with self.lock:
 				try:
 					proxy = self.proxies.pop()
@@ -154,26 +159,25 @@ class CheckerIpinfo(object):
 			try:
 				answer = await send(proxy, timeout=self.TIMEOUT)
 			except Exception as e:
-				print(self.NAME + coloring(f"[{str(len(self.proxies))}]Нерабочая прокси {proxy}", "white"))
 				async with self.lock:
 					self.died.append(proxy)
+				print(self.NAME + f"[{str(len(self.proxies))}]Died proxy: {proxy.normal}")
 			else:
 				if self.getStatus(answer):
-					print(self.NAME + coloring(f"[{str(len(self.proxies))}]Рабочая прокси {proxy}", "green"))
 					async with self.lock:
 						self.green.append(proxy)
+					print(self.NAME + colorama.Fore.GREEN + f"[{str(len(self.proxies))}]Good proxy: {proxy.normal}")
 				else:
-					print(self.NAME + coloring(f"[{str(len(self.proxies))}]Прокси с запрещенным ASN {proxy}", "yellow"))
 					async with self.lock:
 						self.bad.append(proxy)
+					print(self.NAME + colorama.Fore.YELLOW + f"[{str(len(self.proxies))}]Proxy with blacklist ASN: {proxy.normal}")
 
 	async def sendWithProxy(self, proxy, **kwargs):
 		'''
-		Отправка запроса с прокси
+		Sending request from proxy
 		'''
-		_ = proxy.split(":")[0]
-		async with aiohttp.ClientSession(connector=ProxyConnector.from_url(f'{self.protocol}://{proxy}'), **kwargs,) as session:
-			async with session.get(f"http://ipinfo.io/{_}/json", ssl=False) as response:
+		async with aiohttp.ClientSession(connector=ProxyConnector.from_url(proxy.formated), **kwargs,) as session:
+			async with session.get(f"http://ipinfo.io/{proxy.host}/json", ssl=False) as response:
 				return await response.json()
 
 	def getStatus(self, answer):

@@ -8,11 +8,10 @@ import configparser
 import backoff
 from aiohttp_proxy import ProxyConnector
 import colorama
-colorama.init()
+colorama.init(autoreset=True)
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-from modules import coloring, logwrite, tools
-coloring = coloring.coloring
+from modules import tools
 import ssl
 
 
@@ -71,19 +70,15 @@ def ignore_aiohttp_ssl_eror(loop):
 
 class HeadersChecker(object):
 	'''
-	Проверка заголовков
+	Headers checker
 	'''
-	def __init__(self, proxies, protocol):
+	def __init__(self, proxies, settings):
 		super().__init__()
-		self.proxies = proxies
-		self.protocol = protocol
 		self.bad = []
 		self.died = []
 		self.green = []
 		self.url = "http://sode.su/request.php"
-		self.protocol = protocol
 		self.myIP = None
-		# заголовки, с которыми удалять прокси
 		self.blackHeaders = (
 			"Forwarded",
 			"X-Forwarded-Host",
@@ -92,47 +87,19 @@ class HeadersChecker(object):
 		)
 		###################################
 		config = configparser.ConfigParser()
-		config.read("settings.ini", encoding="UTF-8")
+		config.read(settings, encoding="UTF-8")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
 		self.TIMEOUT = aiohttp.ClientTimeout(total=40, connect=config.getint("HEADERS_CHECKER", "TIMEOUT"))
 		self.MAXTRIES = config.getint("HEADERS_CHECKER", "MAXTRIES")
 		self.TASKS = config.getint("HEADERS_CHECKER", "TASKS")
-		self.ANON = config.getboolean("HEADERS_CHECKER", "ANON")
 		########################################
 
-	def getMyIp(self):
-		'''
-		Получение айпи пользователя
-		'''
-		from requests import get as get_
-		url = "https://ipinfo.io/ip"
-		send = backoff.on_exception(backoff.expo, Exception, max_time=120, max_tries=10, jitter=None)(get_)
-		################################
-		try:
-			ip = send(url, proxies=None)
-		except:
-			print(self.NAME + coloring("Не удалось получить ip-адрес для проверки заголовков. \
-				Нажмите ctrl + c или введите ваш айпи ниже.", "yellow"))
-			self.myIP = input(self.NAME + "ip> ")
-		else:
-			self.myIP = ip.text
-			self.myIP = self.myIP[0:-1]
-		return self.myIP
-
-	@tools.errorsCap
+	#@tools.errorsCap
 	def main(self):
 		'''
-		main as main
+		main of headers checker.
 		'''
-		print(self.NAME + coloring("Проверка заголовков началась...", "green"))
-		############################
-		try:
-			self.getMyIp()
-		except KeyboardInterrupt:
-			print(self.NAME + coloring("Отключена функция проверки утечки ip.", "yellow"))
-			self.myIP = None
-		except Exception as e:
-			raise e
+		print(self.NAME + colorama.Fore.GREEN + "Checking headers...")
 		###########################
 		self.lock = asyncio.Lock()
 		loop = asyncio.get_event_loop()
@@ -145,7 +112,7 @@ class HeadersChecker(object):
 		try:
 			loop_response = loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
 		except KeyboardInterrupt:
-			print(self.NAME + coloring("Проверка отменена! Завершение задач...", "yellow"))
+			print("\n" + self.NAME + colorama.Fore.YELLOW + "Check cancelled! Exiting...")
 			for i in tasks:
 				i.cancel()
 		except Exception as e:
@@ -153,24 +120,24 @@ class HeadersChecker(object):
 		else:
 			tools.loopResponse(loop_response, "headers")
 		########################################################################
-		print(self.NAME + coloring("Проверка заголовков закончилась.", "green"))
+		print(self.NAME + colorama.Fore.GREEN + "Checking headers finished!")
 		with open("trashproxies/died.txt", mode="a", encoding="UTF-8") as file:
 			for i in self.died:
-				file.write(i + "\n")
+				file.write(i.normal + "\n")
 		##########################################################################
 		with open("trashproxies/nonAnon.txt", mode="a", encoding="UTF-8") as file:
 			for i in self.bad:
-				file.write(i + "\n")
+				file.write(i.normal + "\n")
 		####################################3
-		print(self.NAME + coloring(f"Записаны нерабочие прокси в trashproxies/died.txt {str(len(self.died))} единиц.", "green"))
-		print(self.NAME + coloring(f"Записаны не анонимные прокси в trashproxies/nonAnon.txt {str(len(self.bad))} единиц.", "green"))
+		print(self.NAME + colorama.Fore.GREEN + f"Bad proxies in trashproxies/died.txt, {len(self.died)}")
+		print(self.NAME + colorama.Fore.GREEN + f"Proxy with blacklist ASN in trashproxies/nonAnon.txt, {len(self.bad)}")
 		return self.green
 
 	async def sendWithProxy(self, proxy, **kwargs):
 		'''
 		Отправка запроса с прокси
 		'''
-		async with aiohttp.ClientSession(connector=ProxyConnector.from_url(f'{self.protocol}://{proxy}'), **kwargs,) as session:
+		async with aiohttp.ClientSession(connector=ProxyConnector.from_url(proxy.formated), **kwargs,) as session:
 			async with session.post(self.url, ssl=False) as response:
 				return await response.json()
 
@@ -192,16 +159,16 @@ class HeadersChecker(object):
 			except Exception as e:
 				async with self.lock:
 					self.died.append(proxy)
-				print(self.NAME + coloring(f"[{str(len(self.proxies))}]Нерабочий прокси: {proxy}", "white"))
+				print(self.NAME + f"[{str(len(self.proxies))}]Died proxy: {proxy.normal}")
 			else:
 				if await self.headersStatus(response, proxy):
 					async with self.lock:
 						self.green.append(proxy)
-					print(self.NAME + coloring(f"[{str(len(self.proxies))}]Найден рабочий прокси: {proxy}", "green"))
+					print(self.NAME + colorama.Fore.GREEN + f"[{str(len(self.proxies))}]Good proxy: {proxy.normal}")
 				else:
 					async with self.lock:
 						self.bad.append(proxy)
-					print(self.NAME + coloring(f"[{str(len(self.proxies))}]Найден прокси с плохими заголовками: {proxy}", "red"))
+					print(self.NAME + colorama.Fore.RED + f"[{str(len(self.proxies))}]Bad-headers proxy: {proxy.normal}")
 
 	async def headersStatus(self, headers, proxy):
 		'''
@@ -209,10 +176,7 @@ class HeadersChecker(object):
 		'''
 		ip = headers["ip"]
 		headers = headers["headers"]
-		if headers["X-Forwarded-For"] != ip and self.ANON:
-			return False
-		################
-		if headers["X-Forwarded-For"] == self.myIP:
+		if headers["X-Forwarded-For"] != ip:
 			return False
 		################
 		for i in self.blackHeaders:
@@ -221,10 +185,6 @@ class HeadersChecker(object):
 		else:
 			return True
 		return False
-
-
-
-
 
 
 

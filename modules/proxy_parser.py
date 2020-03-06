@@ -6,7 +6,7 @@ import asyncio
 import aiohttp
 import configparser
 import colorama
-colorama.init()
+colorama.init(autoreset=True)
 import backoff
 import copy
 import random
@@ -18,8 +18,7 @@ import ssl
 from shutil import rmtree
 from urllib3 import disable_warnings, exceptions
 disable_warnings(exceptions.InsecureRequestWarning)
-from modules import coloring, logwrite, tools
-coloring = coloring.coloring
+from modules import tools
 
 
 def ignore_aiohttp_ssl_eror(loop):
@@ -77,9 +76,9 @@ def ignore_aiohttp_ssl_eror(loop):
 
 class Parser(object):
 	'''
-	Парсер
+	Parser class
 	'''
-	def __init__(self):
+	def __init__(self, settings, *args):
 		super().__init__()
 		try:
 			os.mkdir("downloads/")
@@ -101,28 +100,29 @@ class Parser(object):
 				except:
 					break
 		########################################
-		self.MAINURLS = ( # сайты, с которых парсится основная часть проксей путем регулярочек и архивов
+		self.MAINURLS = ( # sites for parsing
 			"http://www.proxyserverlist24.top/",
 			"http://www.socks24.org",
 			"http://www.vipsocks24.net/",
 			"http://www.socksproxylist24.top/",
-			"http://www.sslproxies24.top/"
+			"http://www.sslproxies24.top/",
+			*args
 			)
 		self.MAINURLS = set(self.MAINURLS)
 		####################################
 		config = configparser.ConfigParser()
-		config.read("settings.ini", encoding="UTF-8")
+		config.read(settings, encoding="UTF-8")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
 		self.TIMEOUT = aiohttp.ClientTimeout(total=30, connect=config.getint("PARSER", "TIMEOUT"))
 		self.MAXTRIES = config.getint("PARSER", "MAXTRIES")
 		self.TASKS = config.getint("PARSER", "TASKS")
 
-	@tools.errorsCap
+
 	def main(self):
 		'''
-		Парсер
+		Start function for start parser object
 		'''
-		print(self.NAME + coloring("Начался парсинг прокси...", "white"))
+		print(self.NAME + colorama.Fore.GREEN + "Started parse...")
 		##############################################
 		self.inputLinks = copy.deepcopy(self.MAINURLS)
 		self.lock = asyncio.Lock()
@@ -130,7 +130,6 @@ class Parser(object):
 		tasks = []
 		ignore_aiohttp_ssl_eror(loop)
 		#############################
-		# парсинг и анализ ссылок
 		for i in range(0, 3):
 			##############################
 			for i in range(0, self.TASKS):
@@ -138,33 +137,26 @@ class Parser(object):
 			####
 			try:
 				loop_response = loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
-			except KeyboardInterrupt:
-				print("\n" + self.NAME + coloring("Парсинг отменен!", "yellow"))
-				return self.proxies
-			except RuntimeError:
-				print("\n" + self.NAME + coloring("Закачка отменена!", "yellow"))
-				return self.proxies
 			except Exception as e:
-				logwrite.log(e, "parser")
-			else:
-				tools.loopResponse(loop_response, "parser")
+				if isinstance(e, (KeyboardInterrupt, RuntimeError, AttributeError)):
+					print("\n" + self.NAME + colorama.Fore.YELLOW + "Parsing stopped! Cancelling all tasks...")
+					for i in tasks:
+						i.cancel()
+					break
+				else:
+					raise e
 			finally:
-				# очистка ссылок, если остались
 				self.inputLinks.clear()
-				# загрузка новых
 				self.inputLinks = copy.deepcopy(self.links)
-				# очистка напарсенных ссылок
 				self.links.clear()
 		#########################################
-			# получены страницы и ссылки с них
 			for i in self.links:
 				if "zip" in i:
 					self.zipLinks.add(i)
 				else:
 					self.inputLinks.add(i)
 		#########################################
-		print(self.NAME + coloring("Анализ найденных ссылок на архивы...", 'green'))
-		# тут скачка страниц с самими ссылками на файл
+		print(self.NAME + colorama.Fore.GREEN + "Analyze founded URLs...")
 		self.inputLinks = copy.deepcopy(self.zipLinks)
 		##############################################
 		for i in range(0, self.TASKS):
@@ -172,42 +164,35 @@ class Parser(object):
 		#########################################################
 		try:
 			loop_response = loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
-		except KeyboardInterrupt:
-			print("\n" + self.NAME + coloring("Парсинг отменен!", "yellow"))
-			return self.proxies
-		except RuntimeError:
-			print("\n" + self.NAME + coloring("Закачка отменена!", "yellow"))
-			return self.proxies
 		except Exception as e:
-			logwrite.log(e, "parser archives")
+			if isinstance(e, (KeyboardInterrupt, RuntimeError, AttributeError)):
+				print("\n" + self.NAME + colorama.Fore.YELLOW + "Parsing stopped! Cancelling all tasks...")
+				for i in tasks:
+					i.cancel()
+			else:
+				raise e
 		else:
 			tools.loopResponse(loop_response, "parser archives")
 		#############################################################
-		# тут скачка архивов
+		# downloading archives
 		self.inputLinks = copy.deepcopy(self.linksForDownload)
-		print(self.NAME + coloring("Загрузка архивов...", "green"))
+		print(self.NAME + colorama.Fore.GREEN + "Downloading .zip archives...")
 		#############################################################
 		for i in range(0, self.TASKS):
 				tasks.append(loop.create_task(self.DownloadArchive()))
 		#############################################################
 		try:
 			loop_response = loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
-		except KeyboardInterrupt:
-			print("\n" + self.NAME + coloring("Проверка отменена! Завершение задач...", "yellow"))
-			for i in tasks:
-				i.cancel()
-			return self.proxies
-		except RuntimeError:
-			print("\n" + self.NAME + coloring("Закачка отменена!", "yellow"))
-			for i in tasks:
-				i.cancel()
-			return self.proxies
 		except Exception as e:
-			logwrite.log(e, "download archives")
+			if isinstance(e, (KeyboardInterrupt, RuntimeError, AttributeError)):
+				print("\n" + self.NAME + colorama.Fore.YELLOW + "Parsing stopped! Cancelling all tasks...")
+				for i in tasks:
+					i.cancel()
+			else:
+				raise e
 		else:
 			tools.loopResponse(loop_response, "download archives")
 		###################################################
-		# распаковка и получение проксей
 		try:
 			self.zipExtractor()
 		except Exception as e:
@@ -215,22 +200,21 @@ class Parser(object):
 				os.chdir("..")
 			if os.access("downloads", mode=0):
 				rmtree("downloads")
-			logwrite.log(e, "open archives")
+			tools.log(e, "open archives")
 		#################################################################
-		print(self.NAME + coloring("Парсинг проксей закончен!", "green"))
-		print(self.NAME + coloring(f"Получено {str(len(self.proxies))} проксей, из которых ", "white"), end="")
+		print(self.NAME + colorama.Fore.GREEN + "Finished parsing proxies.")
+		print(self.NAME + f"Got {str(len(self.proxies))} proxies.")
 		self.proxies = [*self.proxies]
-		print(coloring(f"{str(len(self.proxies))} уникальные.", "green"))
 		#################################################################
 		return self.proxies
 
 	@staticmethod
 	def getLinks(response):
 			'''
-			Получение ссылок из html-страницы
+			Parsing links from html
 			'''
-			answer = bs4.BeautifulSoup(response, "lxml")  # создание объекта супа из html страницы
-			answer = answer.find_all("a")  # получение всех тегов ссылок
+			answer = bs4.BeautifulSoup(response, "lxml")
+			answer = answer.find_all("a")
 			links = []
 			for i in answer:
 				link = i.get("href")
@@ -243,10 +227,10 @@ class Parser(object):
 
 	def getDownloadLinks(self, response):
 		'''
-		Получение прямых ссылок для скачивания и добавление их в множество set
+		Gettings donwload links
 		'''
-		answer = bs4.BeautifulSoup(response, "lxml")  # создание объекта супа из html страницы
-		answer = answer.find_all("a")  # получение всех тегов ссылок
+		answer = bs4.BeautifulSoup(response, "lxml")
+		answer = answer.find_all("a")
 		links = []
 		for i in answer:
 			link = i.get("href")
@@ -259,9 +243,6 @@ class Parser(object):
 
 	@staticmethod
 	async def send(url, **kwargs):
-		'''
-		Отправка GET запроса
-		'''
 		async with aiohttp.ClientSession(**kwargs) as session:
 			async with session.get(url, ssl=False) as response:
 				return await response.text()
@@ -269,7 +250,7 @@ class Parser(object):
 	@staticmethod
 	async def download(url, **kwargs):
 		'''
-		Скачивание архива
+		Downloading file
 		'''
 		async with aiohttp.ClientSession(**kwargs) as session:
 			async with session.get(url, ssl=False, allow_redirects=True) as response:
@@ -277,7 +258,7 @@ class Parser(object):
 
 	async def getWebPage(self):
 		'''
-		Асинхронная задача для скачивания и анализа веб-страниц
+		Async function for searching proxies on sites
 		'''
 		send = backoff.on_exception(backoff.expo, Exception, max_time=60, max_tries=self.MAXTRIES, jitter=None)(self.send)
 		send = self.send
@@ -298,12 +279,11 @@ class Parser(object):
 			headers["User-Agent"] = self.agents[random.randint(0, len(self.agents)-1)]
 			###############
 			try:
-				#print(i)
 				response = await send(i, timeout=self.TIMEOUT, headers=headers)
 			except KeyboardInterrupt:
 				break
 			except Exception as e:
-				print(self.NAME + coloring(f"[{str(len(self.inputLinks))}]Не удалось скачать страницу {i}", "white"))
+				print(self.NAME + f"[{str(len(self.inputLinks))}]Failed to get web-page: {i}")
 			else:
 				local_links = self.getLinks(response)
 				self.parseProxies(response)
@@ -312,11 +292,11 @@ class Parser(object):
 					self.links.update(local_links)
 					self.getDownloadLinks(response)
 				###################################
-				print(self.NAME +coloring(f"[{str(len(self.inputLinks))}]Спарсена страница {i}", "green"))
+				print(self.NAME + colorama.Fore.GREEN + f"[{str(len(self.inputLinks))}]Successfully parsed page: {i}")
 
 	async def DownloadArchive(self):
 		'''
-		Асинхронная задача для скачивания архивов
+		Downloading archives and extracting
 		'''
 		###############################
 		send = backoff.on_exception(backoff.expo, Exception, max_time=60, max_tries=3, jitter=None)(self.download)
@@ -342,48 +322,45 @@ class Parser(object):
 			except KeyboardInterrupt:
 				break
 			except Exception as e:
-				print(self.NAME + coloring(f"Не удалось загрузить архив {i}", "white"))
+				print(self.NAME + f"Failed to download archive {i}")
 			else:
 				self.saveArchive(response)
 
 	def zipExtractor(self):
 		'''
-		Распаковка архивов
+		Extracting zip files
 		'''
 		os.chdir("downloads")
 		files = os.listdir()
 		########################
-		# анализ списка файлов в downloads
 		for i in files:
 			###################
-			# если не зипфайл - пропускать
 			if not ".zip" in i:
 				os.chmod(i, 0o777)
 				os.remove(i)
 				continue
 			###################
-			# открываем зипом и распаковываем
 			try:
 				xfile = zipfile.ZipFile(i)
 				xfile.extractall()
 				xfile.close()
 			except Exception as e:
 				os.remove(i)
-				print(self.NAME + coloring(f"Ошибка распаковки архива {i}!", "red"))
+				print(self.NAME + colorama.Fore.RED + f"Error while extracting archive {i}")
 				#raise e
 				continue
 			else:
-				print(self.NAME + coloring(f"Удалось успешно распаковать архив {i}", "green"))
+				print(self.NAME + colorama.Fore.GREEN + f"Successfully extracted archive {i}")
 			##################
-			# получаем список распакованных файлов
+			# list of extracted files
 			extracted = os.listdir()
 			##################
 			for l in extracted:
-				# получаем прокси из .txt файла
+				# parsing proxies from txt files
 				if ".txt" in l:
 					self.loadProxies_(l)
 			##################
-			# удаляем то, что распаковали
+			# removing shit
 			for j in extracted:
 				os.chmod(j, 0o777)
 				if ".zip" in j:
@@ -394,8 +371,8 @@ class Parser(object):
 					except IsADirectoryError:
 						rmtree(j)
 					except Exception as e:
-						print(self.NAME + coloring(f"Ошибка {e} при удалении файла {j}", "red"))
-						logwrite.log(e, "zipExtractor")
+						print(self.NAME + colorama.Fore.RED + f"Error {e} while deleting file {j}")
+						tools.log(e, "zipExtractor")
 			#################
 			os.remove(i)
 			#################
@@ -405,11 +382,11 @@ class Parser(object):
 		except OSError:
 			rmtree("downloads")
 		except Exception as e:
-			logwrite.log(e, "remove downloads")
+			tools.log(e, "remove downloads")
 
 	def parseProxies(self, string):
 		'''
-		Парсинг проксей с помощью регулярок из html страницы
+		Parsing proxies with RegEx
 		'''
 		if not isinstance(string, str):
 			string = str(string)
@@ -418,17 +395,17 @@ class Parser(object):
 
 	def saveArchive(self, content):
 		'''
-		Сохранение архива
+		Saving archive
 		'''
 		filename = os.getcwd() + "/downloads/" + str(random.randint(1, 10000)) + ".zip"
 		with open(filename, mode="wb") as file:
 			file.write(content)
 		os.chmod(filename, 0o777)
-		print(self.NAME + coloring(f"Успешно сохранен архив {filename}", "green"))
+		print(self.NAME + colorama.Fore.GREEN + f"Successfully downloaded archive {filename}")
 
 	def loadProxies_(self, txt):
 		'''
-		Получения проксей из txt, используется в другом методе
+		Opening txt files
 		'''
 		with open(txt, mode="r") as file:
 			proxies = file.read().split("\n")
@@ -437,7 +414,7 @@ class Parser(object):
 					proxies.remove("")
 				except:
 					break
-		print(self.NAME + coloring(f"Получено {str(len(proxies))}.", "green"))
+		print(self.NAME + colorama.Fore.GREEN +  f"Got {str(len(proxies))} proxies.")
 		self.proxies.update(proxies)
 
 

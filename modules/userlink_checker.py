@@ -7,12 +7,10 @@ import aiohttp_proxy
 import json
 import configparser
 import colorama
-colorama.init()
+colorama.init(autoreset=True)
+from modules import tools
 from urllib3 import disable_warnings, exceptions
 disable_warnings(exceptions.InsecureRequestWarning)
-from modules import coloring
-coloring = coloring.coloring
-from modules import logwrite
 import backoff
 from aiohttp_proxy import ProxyConnector
 import copy
@@ -81,12 +79,11 @@ class UnsupportedType(TypeError):
 
 class UserChecker(object):
 	'''
-	Юзер-чекер
+	user`s checker
 	'''
-	def __init__(self, proxies, protocol):
+	def __init__(self, proxies, settings):
 		super().__init__()
 		self.proxies = proxies
-		self.protocol = protocol
 		self.died = []
 		self.green = []
 		self.bad = []
@@ -109,7 +106,7 @@ class UserChecker(object):
 					break
 		#####################################
 		config = configparser.ConfigParser()
-		config.read("settings.ini", encoding="UTF-8")
+		config.read(settings, encoding="UTF-8")
 		self.NAME = "\x1b[32m" + config["main"]["NAME"] + "\x1b[0m"
 		self.TIMEOUT = aiohttp.ClientTimeout(total=40, connect=config.getint("USER_CHECKER", "TIMEOUT"))
 		self.MAXTRIES = config.getint("USER_CHECKER", "MAXTRIES")
@@ -126,10 +123,10 @@ class UserChecker(object):
 		if self.TYPE in "GET POST HEAD":
 			pass
 		else:
-			raise UnsupportedType(f"Неподдерживаемый тип запроса {self.TYPE}")
+			raise UnsupportedType(f"Unknown request type: {self.TYPE}")
 
 	def main(self):
-		print(self.NAME + coloring("Проверка юзер-запросами началась...", "green"))
+		print(self.NAME + colorama.Fore.GREEN + "Starting user`s request check...")
 		###################
 		self.checkingData()
 		self.lock = asyncio.Lock()
@@ -141,34 +138,34 @@ class UserChecker(object):
 			tasks.append(loop.create_task(self.startingCheck()))
 		#############
 		try:
-			loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
+			loop_response = loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
 		except KeyboardInterrupt:
-			print("\n" + self.NAME + coloring("Проверка отменена!", "yellow"))
+			print("\n" + self.NAME + colorama.Fore.YELLOW + "Check cancelled! Exiting...")
 			for i in tasks:
 				i.cancel()
-		except UnsupportedType:
-			print(self.NAME + coloring(f"Неподдерживаемый тип запроса {self.TYPE}", "red"))
 		except Exception as e:
 			raise e
+		else:
+			tools.loopResponse(loop_response, "user`s checker")
 		########################
 		with open("trashproxies/died.txt", mode="a", encoding="UTF-8") as file:
 			for i in self.died:
-				file.write(i + "\n")
+				file.write(i.normal + "\n")
 		#########################
 		with open("trashproxies/userBad.txt", mode="a", encoding="UTF-8") as file:
 			for i in self.bad:
-				file.write(i + "\n")
+				file.write(i.normal + "\n")
 		###########################
-		print(self.NAME + coloring(f"Записаны нерабочие прокси в trashproxies/died.txt {str(len(self.died))} единиц.", "green"))
-		print(self.NAME + coloring(f"Записаны заблокированные прокси в trashproxies/userBad.txt {str(len(self.bad))} единиц.", "green"))
-		print(self.NAME + coloring("Проверка юзер-запросами закончилась...", "green"))
+		print(self.NAME + colorama.Fore.GREEN + f"Bad proxies in trashproxies/died.txt, {len(self.died)}")
+		print(self.NAME + colorama.Fore.GREEN + f"User-bad proxies in trashproxies/userBad, {len(self.bad)}")
+		print(self.NAME + colorama.Fore.GREEN + "User`s check finished!")
 		return self.green
 
 	async def sendWithProxy(self, proxy, requestKwargs, **kwargs):
 		'''
-		Отправка запроса
+		Sending request
 		'''
-		async with aiohttp.ClientSession(connector=ProxyConnector.from_url(f'{self.protocol}://{proxy}'), **kwargs,) as session:
+		async with aiohttp.ClientSession(connector=ProxyConnector.from_url(proxy.formated), **kwargs,) as session:
 			if self.TYPE == "POST":
 				async with session.post(self.URL, ssl=False, **requestKwargs) as response:
 					return await response.text()
@@ -179,12 +176,11 @@ class UserChecker(object):
 				async with session.head(self.URL, ssl=False, **requestKwargs) as response:
 					return await response.text()
 			else:
-				raise UnsupportedType("Неподдерживаемый тип запроса!")
+				raise UnsupportedType(f"Unknown request type: {self.TYPE}")
 
 	async def userFilter(self, response):
 		'''
-		Юзер фильтр, замописный. Принимает ответный текст запроса. Если ответ 
-		правильный/нужный - возвращает True, иначе false. Пример ниже.
+		User filter function. Gets string of response. True if answer good, False if answer Bad
 		'''
 		# if my_value in response:
 		# 	return True
@@ -194,7 +190,10 @@ class UserChecker(object):
 		return True
 
 	async def startingCheck(self):
-		send = backoff.on_exception(backoff.expo, Exception, max_time=60, max_tries=self.MAXTRIES, jitter=None)(self.sendWithProxy)
+		''' 
+		Async task for checking countries
+		'''
+		send = backoff.on_exception(backoff.expo, Exception, max_time=30*self.MAXTRIES, max_tries=self.MAXTRIES, jitter=None)(self.sendWithProxy)
 		##############
 		while True:
 			################
@@ -223,19 +222,18 @@ class UserChecker(object):
 				loop.stop()
 				break
 			except Exception as e:
-				#print(e)
 				async with self.lock:
 					self.died.append(proxy)
-				print(self.NAME + coloring(f"[{str(len(self.proxies))}]Нерабочий прокси: {proxy}", "white"))
+				print(self.NAME + f"[{str(len(self.proxies))}]Died proxy: {proxy.normal}")
 			else:
 				if await self.userFilter(response):
 					async with self.lock:
 						self.green.append(proxy)
-					print(self.NAME + coloring(f"[{str(len(self.proxies))}]Найден рабочий прокси: {proxy}", "green"))
+					print(self.NAME + colorama.Fore.GREEN + f"[{str(len(self.proxies))}]Good proxy: {proxy.normal}")
 				else:
 					async with self.lock:
 						self.bad.append(proxy)
-					print(self.NAME + coloring(f"[{str(len(self.proxies))}]Найден заблокированный прокси: {proxy}", "yellow"))
+					print(self.NAME + colorama.Fore.YELLOW + f"[{str(len(self.proxies))}]Bad user`s check proxy: {proxy.normal}")
 
 
 
